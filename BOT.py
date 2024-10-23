@@ -5,10 +5,15 @@ from dotenv import load_dotenv
 from Werewolf_game import Game,Player
 
 #chargement des informations utiles s
-"""load_dotenv()
-TOKEN = os.getenv('DISCORD_TOKEN')
-SERVER = os.getenv('DISCORD_SERVER')
-PERMISSIONS = os.getenv('DISCORD_PERMISSIONS')"""
+response = load_dotenv()
+if response:
+	TOKEN = os.getenv('DISCORD_TOKEN')
+	SERVER = os.getenv('DISCORD_SERVER')
+	PERMISSIONS = os.getenv('DISCORD_PERMISSIONS')
+else:
+	print("TOKEN is not present. Is it adviced to quit")
+	if input("Contiure anyway (enter to continue) : ") != "":
+		quit()
 
 """
 Ceci est une tentative du jeu du loup garou sur un bot discord.
