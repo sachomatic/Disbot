@@ -1,10 +1,13 @@
 class Game():
     def __init__(self,player_list,server):
+        #liste des joueurs, des rôles,des votes, et des morts
         self.player_list = player_list
         self.spe_roles = ['president','cupidon','hunter','witch','stealer']
         self.vote_list = []
         self.killed_list = {}
+        #nombre de tours
         self.round = 0
+        #serveur
         self.server = server
         self.channels = server.channels
         self.peasant_channel = None

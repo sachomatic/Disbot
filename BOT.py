@@ -4,17 +4,6 @@ from discord.ext import commands
 from dotenv import load_dotenv
 from Werewolf_game import Game,Player
 
-#chargement des informations utiles s
-response = load_dotenv()
-if response:
-	TOKEN = os.getenv('DISCORD_TOKEN')
-	SERVER = os.getenv('DISCORD_SERVER')
-	PERMISSIONS = os.getenv('DISCORD_PERMISSIONS')
-else:
-	print("TOKEN is not present. Is it adviced to quit")
-	if input("Contiure anyway (enter to continue) : ") != "":
-		quit()
-
 """
 Ceci est une tentative du jeu du loup garou sur un bot discord.
 Toutes les fonctions doivent être asynchrones
@@ -29,7 +18,16 @@ player : dans notre cas, utilisateur
 
 """
 
-
+#chargement des informations utiles s
+response = load_dotenv()
+if response:
+	TOKEN = os.getenv('DISCORD_TOKEN')
+	SERVER = os.getenv('DISCORD_SERVER')
+	PERMISSIONS = os.getenv('DISCORD_PERMISSIONS')
+else:
+	print("TOKEN is not present. Is it adviced to quit")
+	if input("Continue anyway? (enter to continue) : ") != "":
+		quit()
 
 #buts/permissions (lire les messages,réagir,accéder aux infos des membres,gérer les channels et les rôles )
 intents = discord.Intents.default()
@@ -189,7 +187,9 @@ async def enamorate(ctx,*args,**kwargs):
 			if lover1 == lover2:
 				await ctx.send("Lovers can't be the same")
 				return
-		except:
+		#Si le joueur n'a pas fourni d'arguments, sa réponse est invalidée
+		except KeyError:
+			await ctx.send("Two lovers must be specified")
 			return
 		#on envoie la 'requête' à la partie
 		await game.transfer_response((lover1,lover2))
@@ -204,14 +204,18 @@ async def steal(ctx,*args,**kwargs):
 		await ctx.send("Game is not created")
 		return
 	player = game.get_element_by_attribute(game.player_list,"role","stealer","name")[0]
+	#on vérifie que le jouer est vivant et qu'il est voleur
 	if ctx.author.display_name == player and player.state == 0:
 		try:
 			stealed = args[0]
+			#on vérifie que le jouer ne se vole pas lui même
 			if ctx.author == stealed:
 				await ctx.send("You can't steal yourself.")
 				return
 			else:
+				#on transfère les données
 				await game.transfer_response(stealed)
+		#Si le joueur n'a pas fourni d'arguments, sa réponse est invalidée
 		except:
 			await ctx.send("No player chosen.")
 			return
@@ -226,14 +230,18 @@ async def hunt(ctx,*args,**kwargs):
 		await ctx.send("Game is not created")
 		return
 	player = game.get_element_by_attribute(game.player_list,"role","hunt")[0]
+	#on vérifie que le jouer est vivant et qu'il est chasseur
 	if ctx.author.display_name == player.name and player.state == 0:
 		try:
 			hunted = args[0]
+			#on vérifie que le joueur ne se tue pas lui même
 			if ctx.author == hunted:
-				await ctx.send("You can't shot yourself.")
+				await ctx.send("You can't shoot yourself.")
 				return
 			else:
+				#on transfère les données
 				await game.transfer_response(hunted)
+		#Si le joueur n'a pas fourni d'arguments, sa réponse est invalidée
 		except:
 			await ctx.send("No player chosen.")
 			return
@@ -248,7 +256,9 @@ async def steal(ctx,*args,**kwargs):
 		await ctx.send("Game is not created")
 		return
 	player = game.get_element_by_attribute(game.player_list,"role","witch")[0]
+	#on vérifie que le jouer est une sorcière
 	if ctx.author.display_name == player.name and player.state == 0:
+		#on transfère les données
 		await game.transfer_response(["save",None])
 	else:
 		await ctx.send("You are not a witch or are dead.")
@@ -260,15 +270,19 @@ async def steal(ctx,*args,**kwargs):
 		await ctx.send("Game is not created")
 		return
 	player = game.get_element_by_attribute(game.player_list,"role","witch","name")[0]
+	#on vérifie que le jouer est une sorcière
 	if ctx.author.display_name == player and player.state == 0:
 		try:
 			target = args[0]
+			#on vérifie que le joueur ne se tue pas lui même
 			if ctx.author == target:
 				await ctx.send("You can't kill yourself.")
 				return
 			else:
+				#on transfère les données
 				await game.transfer_response(["kill",target])
-		except:
+		#Si le joueur n'a pas fourni d'arguments, sa réponse est invalidée
+		except KeyError:
 			await ctx.send("No player chosen.")
 			return
 	else:
@@ -282,20 +296,23 @@ async def vote(ctx,*args,**kwargss):
 		await ctx.send("Game is not created")
 		return
 	user = game.get_element_by_attribute(game.player_list,"name",ctx.author.display_name)
+	#On vérifie que le joueur est vivant et que c'est le jour
 	if user.state == True:
 		if game.night_day == "day":
 			try:
 				voted = args[0]
+			#Si le joueur n'a pas fourni d'arguments, sa réponse est invalidée
 			except:
 				await ctx.send("No player chosen.")
 				return
 			game.vote(voted)
 		else:
-			ctx.sed("It's not the time to vote yet.")
+			ctx.send("It's not the time to vote yet.")
 	else:
 		await ctx.send("You're dead, you can't vote")
 
 
+#commande pour préparer le jeu, à n'éxécuter qu'une fois pour chaque serveur
 @bot.command(name='setup')
 async def setup(ctx):
 	await ctx.send("Setting up")
@@ -401,10 +418,11 @@ async def test(ctx,*args,**kwargs):
 	tampon = get_decimal_numbers(t_minutes)
 	minutes = int(t_minutes)
 	seconds = int(tampon*60)
-	await ctx.send(f"Hello {ctx.author}. Running since {og_days} the {og_day_nb}, at {og_hours}h{og_minutes}m, for {hours}:{minutes}:{seconds}. Server list :")
-	await ctx.send("Members of the guild:")
+	await ctx.send(f"Hello '{ctx.author}'. Running since {og_days} the {og_day_nb}, at {og_hours}h{og_minutes}m, for {hours}:{minutes}:{seconds}.")
+	await ctx.send(f"Members of {ctx.guild}:")
 	for members in ctx.guild.members:
 		await ctx.send(f"-{members}")
+	await ctx.send("I am on ")
 
 """@bot.event()
 async def on_message(ctx):
