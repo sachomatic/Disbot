@@ -5,10 +5,10 @@ from dotenv import load_dotenv
 from Werewolf_game import Game,Player
 
 #chargement des informations utiles s
-load_dotenv()
+"""load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 SERVER = os.getenv('DISCORD_SERVER')
-PERMISSIONS = os.getenv('DISCORD_PERMISSIONS')
+PERMISSIONS = os.getenv('DISCORD_PERMISSIONS')"""
 
 """
 Ceci est une tentative du jeu du loup garou sur un bot discord.
