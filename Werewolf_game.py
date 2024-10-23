@@ -22,7 +22,7 @@ class Game():
             elif channel.name == "specials":
                 self.specials_channel = channel
     
-    def give_roles(self):
+    def create_roles(self):
         import random
         self.game_roles = {}
         if len(self.player_list) == 7 :

@@ -4,24 +4,42 @@ from discord.ext import commands
 from dotenv import load_dotenv
 from Werewolf_game import Game,Player
 
+#chargement des informations utiles
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 SERVER = os.getenv('DISCORD_SERVER')
 PERMISSIONS = os.getenv('DISCORD_PERMISSIONS')
 
+"""
+Ceci est une tentative du jeu du loup garou sur un bot discord.
+Toutes les fonctions doivent être asynchrones
+
+ctx : contexte discord, dans notre cas, c'est les messages appellant la fonction.
+	.send() : envoyer dans le channel où le message a été envoyé
+	.guild : le serveur du message
+	.author : l'auteur du message
+
+player : dans notre cas, utilisateur
+	.send() : envoyer dans les messages privés
+
+"""
+
+
+
+#buts/permissions (lire les messages,réagir,accéder aux infos des membres,gérer les channels et les rôles )
 intents = discord.Intents.default()
 intents.message_content = True
 intents.reactions = True
 intents.members = True
-
 overwrite = discord.PermissionOverwrite()
 overwrite.read_messages = False
 overwrite.manage_channels = True
 overwrite.manage_roles = True
-overwrite.manage_channels = True
 
+#création du bot/connexion à discord
 bot = commands.Bot(command_prefix='!',intents = intents,overwrite=overwrite)
 
+#date de démarrage et infos liés au temps
 og_time = time.time()
 
 d = {0:'monday',1:'tuesdays',2:'wednesdays',3:'thursdays',4:'friday',5:'saturday',6:'sunday'}
@@ -31,18 +49,8 @@ og_day_nb = datetime.datetime.now().day
 og_hours = datetime.datetime.now().hour
 og_minutes = datetime.datetime.now().minute
 
-async def on_ready(c,*args,**kwargs):
-	guild_count = 0
-
-	for guild in bot.guilds:
-		await c.send(f"- id:{guild.id} name:{guild.name}")
-
-		guild_count += 1
-	print("Ready!")
-
-	await c.send("DisDawn is in " + str(guild_count) + " guilds.")
-
 def get_decimal_numbers(number):
+	#Obtenir les chiffres décimaux d'un flottant
     number_str = str(number)
     decimal_index = number_str.find('.')
     if decimal_index == -1:
@@ -52,22 +60,22 @@ def get_decimal_numbers(number):
 
 @bot.command(name='create_game')
 async def create_game(ctx,*args,**kwargs):
+	#La fonction pour commencer une partie
 	global game_start
 	global player_lst
 	await ctx.send('@everyone Starting game in 1 minute. Use !start to start now and !join to join the game! There must be at least 4 players to start the game and maximum 10 players')
 	game_start = True
 	player_lst = []
+	#On attends une minute pour que les jouers rejoignent, puis on lance la partie
 	for i in range(60):
 		await asyncio.sleep(1)
 		if game_start == False:
 			return
 	await start_game(ctx)
 
-async def obtain_channel_list():
-	channels_to_obtain = ["village","werewolf","stealer","president","cupidon","witch"]
-
 @bot.command(name='start')
 async def start_game(ctx,*args,**kwargs):
+	#Lancer la partie, peut être appelé avant la fin du timer
 	global game_start
 	global player_lst
 	global game
@@ -77,19 +85,23 @@ async def start_game(ctx,*args,**kwargs):
 			return
 		else:
 			game_start = False
+			#Game() est la classe qui gère la partie en cours
 			game = Game(player_lst,ctx.guild)
 			await ctx.send("@everyone Starting game with:",delete_after = 5)
 			for pl in game.player_list:
 				await ctx.send(f'-{pl.name}',delete_after = 5)
-			game.give_roles()
+			#Création des rôles (1-9) pour l'anonimat des rôles
+			game.create_roles()
 			for player in player_lst:
 				await player.discord.send(f"You are a {player.role}")
 			await ctx.send("Please wait while the roles are resetting.")
-			try:	
+			try:
+				#Les rôles de la partie précédente, si ils existent, sont retirés
 				await game.reset(ctx)
 			except:
 				await ctx.send("Error : roles couldn't be resetted, game will continue but might crash")
 			await ctx.send("Let's go!")
+			#attribution des rôles
 			await game.assign_roles(ctx)
 			await game.start(ctx)
 
@@ -105,6 +117,7 @@ async def start_game(ctx,*args,**kwargs):
 		await ctx.send("An error occured, causing the game to crash. Please restart it.")
 
 async def search_channel(name,server):
+	#Chercher dans le serveur une channel particulière
 	for channel in server.channels:
 		if str(channel.name) == str(name):
 			return channel
@@ -121,21 +134,30 @@ async def get_roles():
 	except:
 		return False
 
-#Specials commands
+#Commandes pour les rôles spéciaux (autre que les villageois)
 
 @bot.command(name='kill')
 async def kill(ctx,*args,**kwargs):
 	global game
-	ws = game.get_element_by_attribute(game.player_list,"role","werewolf","name")
+	#on vérifie que la partie est crée
+	if not "game" in globals():
+		await ctx.send("Game is not created")
+		return
+	#obtention des noms des loup garou
+	name_list = game.get_element_by_attribute(game.player_list,"role","werewolf","name")
 	try:
-		player = game.get_element_by_attribute(ws,"name",ctx.author.display_name)[0]
+		#obtention du joueur qui a lancé la commande et vérification qu'il est loup garou
+		player = game.get_element_by_attribute(name_list,"name",ctx.author.display_name)[0]
+		#On vérifie que le joueur n'est pas mort
 		if player.state == 0:
 			try:
+				#obtention du jouer pour lequel le loup garou a voté
 				name = args[0]
 				await ctx.send(f"Voted for {name}")
 			except:
 				await ctx.send("Player name missing.")
 				return
+			#La partie est en suspension en attendant (il y a un timeout) que les loups garou votent
 			game.vote(name)
 			await game.transfer_response(name)
 		else:
@@ -146,16 +168,25 @@ async def kill(ctx,*args,**kwargs):
 @bot.command(name="enamorate")
 async def enamorate(ctx,*args,**kwargs):
 	global game
+	#on vérifie que la partie est crée
+	if not "game" in globals():
+		await ctx.send("Game is not created")
+		return
+	#Obtention du joueur
 	player = game.get_element_by_attribute(game.player_list,"role","cupidon","name")[0]
+	#Vérification que le joueur est bien cupidon et n'est pas mort
 	if ctx.author.display_name == player.name and player.state == 0:
 		try:
+			#obtention des deux amoureux
 			lover1 = args[0]
 			lover2 = args[1]
+			#on vérifie que les deux joueurs ne sont pas les mêmes
 			if lover1 == lover2:
 				await ctx.send("Lovers can't be the same")
 				return
 		except:
 			return
+		#on envoie la 'requête' à la partie
 		await game.transfer_response((lover1,lover2))
 	else:
 		await ctx.send("You are not cupidon or are dead.")
@@ -163,6 +194,10 @@ async def enamorate(ctx,*args,**kwargs):
 @bot.command(name="steal")
 async def steal(ctx,*args,**kwargs):
 	global game
+	#on vérifie que la partie est crée
+	if not "game" in globals():
+		await ctx.send("Game is not created")
+		return
 	player = game.get_element_by_attribute(game.player_list,"role","stealer","name")[0]
 	if ctx.author.display_name == player and player.state == 0:
 		try:
@@ -181,6 +216,10 @@ async def steal(ctx,*args,**kwargs):
 @bot.command("hunt")
 async def hunt(ctx,*args,**kwargs):
 	global game
+	#on vérifie que la partie est crée
+	if not "game" in globals():
+		await ctx.send("Game is not created")
+		return
 	player = game.get_element_by_attribute(game.player_list,"role","hunt")[0]
 	if ctx.author.display_name == player.name and player.state == 0:
 		try:
@@ -199,6 +238,10 @@ async def hunt(ctx,*args,**kwargs):
 @bot.command(name="save")
 async def steal(ctx,*args,**kwargs):
 	global game
+	#on vérifie que la partie est crée
+	if not "game" in globals():
+		await ctx.send("Game is not created")
+		return
 	player = game.get_element_by_attribute(game.player_list,"role","witch")[0]
 	if ctx.author.display_name == player.name and player.state == 0:
 		await game.transfer_response(["save",None])
@@ -208,6 +251,9 @@ async def steal(ctx,*args,**kwargs):
 @bot.command(name="poison")
 async def steal(ctx,*args,**kwargs):
 	global game
+	if not "game" in globals():
+		await ctx.send("Game is not created")
+		return
 	player = game.get_element_by_attribute(game.player_list,"role","witch","name")[0]
 	if ctx.author.display_name == player and player.state == 0:
 		try:
@@ -226,6 +272,10 @@ async def steal(ctx,*args,**kwargs):
 @bot.command(name="vote")
 async def vote(ctx,*args,**kwargss):
 	global game
+	#on vérifie que la partie est crée
+	if not "game" in globals():
+		await ctx.send("Game is not created")
+		return
 	user = game.get_element_by_attribute(game.player_list,"name",ctx.author.display_name)
 	if user.state == True:
 		if game.night_day == "day":
@@ -244,7 +294,7 @@ async def vote(ctx,*args,**kwargss):
 @bot.command(name='setup')
 async def setup(ctx):
 	await ctx.send("Setting up")
-	temp = Game('me')
+	temp = Game('me',ctx.guild)
 	await ctx.send("Creating channels...")
 	ver = False
 	for channel in ctx.guild.channels:
@@ -347,7 +397,6 @@ async def test(ctx,*args,**kwargs):
 	minutes = int(t_minutes)
 	seconds = int(tampon*60)
 	await ctx.send(f"Hello {ctx.author}. Running since {og_days} the {og_day_nb}, at {og_hours}h{og_minutes}m, for {hours}:{minutes}:{seconds}. Server list :")
-	await on_ready(c=ctx)
 	await ctx.send("Members of the guild:")
 	for members in ctx.guild.members:
 		await ctx.send(f"-{members}")
