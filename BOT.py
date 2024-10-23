@@ -4,7 +4,7 @@ from discord.ext import commands
 from dotenv import load_dotenv
 from Werewolf_game import Game,Player
 
-#chargement des informations utiles
+#chargement des informations utiles s
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 SERVER = os.getenv('DISCORD_SERVER')
