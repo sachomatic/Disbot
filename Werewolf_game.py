@@ -46,7 +46,7 @@ class Game:
         #            self.specials_channel = channel
 
     def attribute_game_roles(self):
-        print("Création des rôles")
+        print("Creating roles")
         self.game_roles = {}
         if len(self.player_list) == 7:
             for role in self.spe_roles:
@@ -73,7 +73,7 @@ class Game:
             config = load(file)
 
     async def assign_roles(self, ctx: discord.ext.commands.Context):
-        print("Attribution des rôles discord")
+        print("Attributing roles")
         werewolf_channel = self.werewolf_channel
         specials_channel = self.specials_channel
 
@@ -104,7 +104,7 @@ class Game:
                 await player.discord.add_roles(r)
 
     async def reset(self, ctx: discord.ext.commands.Context):
-        print("Supression des rôles discord")
+        print("Deleting roles on users")
         overwrite = discord.PermissionOverwrite()
         overwrite.view_channel = False
 
