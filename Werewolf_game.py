@@ -353,7 +353,7 @@ class Game:
 
 
 class Player:
-    def __init__(self, name, discord):
+    def __init__(self, name, discord: discord.User | discord.Member):
         self.name = name
         self.discord = discord
         self.state = True
