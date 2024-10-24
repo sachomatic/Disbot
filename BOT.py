@@ -102,32 +102,28 @@ async def start_game(ctx: commands.Context, *args, **kwargs):
     global player_lst
     global game
     try:
-        if game_start is True:
-            await ctx.send("Game is not created. Please use !create_game.")
-            return
-        else:
-            game_start = False
-            # Game() est la classe qui gère la partie en cours
-            game = Game(player_lst, ctx.guild)
-            await ctx.send("@everyone Starting game with:", delete_after=5)
-            for pl in game.player_list:
-                await ctx.send(f"-{pl.name}", delete_after=5)
-            # Création des rôles (1-9) pour l'anonimat des rôles
-            game.create_roles()
-            for player in player_lst:
-                await player.discord.send(f"You are a {player.role}")
-            await ctx.send("Please wait while the roles are resetting.")
-            try:
-                # Les rôles de la partie précédente, si ils existent, sont retirés
-                await game.reset(ctx)
-            except: # Quel exception ? Peut être important lors de tests
-                await ctx.send(
-                    "Error : roles couldn't be resetted, game will continue but might crash"
-                )
-            await ctx.send("Let's go!")
-            # attribution des rôles
-            await game.assign_roles(ctx)
-            await game.start(ctx)
+        game_start = False
+        # Game() est la classe qui gère la partie en cours
+        game = Game(player_lst, ctx.guild)
+        await ctx.send("@everyone Starting game with:", delete_after=5)
+        for pl in game.player_list:
+            await ctx.send(f"-{pl.name}", delete_after=5)
+        # Création des rôles (1-9) pour l'anonimat des rôles
+        game.create_roles()
+        for player in player_lst:
+            await player.discord.send(f"You are a {player.role}")
+        await ctx.send("Please wait while the roles are resetting.")
+        try:
+            # Les rôles de la partie précédente, si ils existent, sont retirés
+            await game.reset(ctx)
+        except: # Quel exception ? Peut être important lors de tests
+            await ctx.send(
+                "Error : roles couldn't be resetted, game will continue but might crash"
+            )
+        await ctx.send("Let's go!")
+        # attribution des rôles
+        await game.assign_roles(ctx)
+        await game.start(ctx)
 
     except NameError as error:
         await ctx.send("Game is not created. Please use !create_game.")
