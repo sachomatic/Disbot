@@ -33,17 +33,7 @@ class Game:
             if channel.name == "specials":
                 self.specials_channel = channel
 
-        # for channel in self.channels:
-        #    match channel.name:
-        #        case "peasant":
-        #            assert type(channel) is TextChannel
-        #            self.peasant_channel = channel
-        #        case "werewolf":
-        #            assert type(channel) is TextChannel
-        #            self.werewolf_channel = channel
-        #        case "specials":
-        #            assert type(channel) is TextChannel
-        #            self.specials_channel = channel
+        assert all(type(channel) is discord.TextChannel for channel in (self.peasant_channel, self.werewolf_channel, self.specials_channel))
 
     def attribute_game_roles(self):
         print("Creating roles")
@@ -69,8 +59,9 @@ class Game:
             self.player_list[6].role = role_spe2
 
     def adv_create_role(self):
-        with open(".\werewolfes.toml") as file:
+        with open("werewolfes.toml") as file:
             config = load(file)
+        raise NotImplementedError
 
     async def assign_roles(self, ctx: discord.ext.commands.Context):
         print("Attributing roles")
@@ -123,6 +114,8 @@ class Game:
                 try:
                     await user.discord.remove_roles(role)
                 except Exception as error:
+                    if type(error) in KeyboardInterrupt:
+                        raise KeyboardInterrupt
                     print(error)
 
     async def transfer_response(self, r):
@@ -363,7 +356,7 @@ class Game:
 
 
 class Player:
-    def __init__(self, name, discord):
+    def __init__(self, name, discord: discord.User | discord.Member):
         self.name = name
         self.discord = discord
         self.state = True
