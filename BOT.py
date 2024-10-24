@@ -339,7 +339,7 @@ async def vote(ctx: commands.Context, *args, **kwargss):
             try:
                 voted = args[0]
             # Si le joueur n'a pas fourni d'arguments, sa réponse est invalidée
-            except:
+            except IndexError:
                 await ctx.send("No player chosen.")
                 return
             game.vote(voted)
