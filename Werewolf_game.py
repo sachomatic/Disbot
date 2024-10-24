@@ -32,8 +32,18 @@ class Game:
                 self.werewolf_channel = channel
             if channel.name == "specials":
                 self.specials_channel = channel
-        
-        assert all(type(channel) is discord.TextChannel for channel in (self.peasant_channel, self.werewolf_channel, self.specials_channel))
+
+        # for channel in self.channels:
+        #    match channel.name:
+        #        case "peasant":
+        #            assert type(channel) is TextChannel
+        #            self.peasant_channel = channel
+        #        case "werewolf":
+        #            assert type(channel) is TextChannel
+        #            self.werewolf_channel = channel
+        #        case "specials":
+        #            assert type(channel) is TextChannel
+        #            self.specials_channel = channel
 
     def create_roles(self):
         self.game_roles = {}
