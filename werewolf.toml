@@ -1,0 +1,11 @@
+# Actuellement inutilisé
+
+[EV_NIGHT]
+order = ["werewolfes"]
+werewolfes = {}
+
+[ROLES]
+list = ["peasant", "werewolf"]
+ratio = [5, 3]
+peasant = {team=0, sname="peasant", pname="peasants", evnight=[]}
+werewolf = {team=1, sname="werewolf", pname="werewolfes", evnight=["werewolfes"]}
