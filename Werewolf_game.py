@@ -1,4 +1,3 @@
-
 import random
 import discord
 from tomllib import load
