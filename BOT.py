@@ -101,6 +101,9 @@ async def start_game(ctx: commands.Context, *args, **kwargs):
     global game_start
     global player_lst
     global game
+    if "game" in globals():
+        await ctx.send("Game already started.")
+        return
     try:
         game_start = False
         # Game() est la classe qui gère la partie en cours
@@ -109,7 +112,7 @@ async def start_game(ctx: commands.Context, *args, **kwargs):
         for pl in game.player_list:
             await ctx.send(f"-{pl.name}", delete_after=5)
         # Création des rôles (1-9) pour l'anonimat des rôles
-        game.create_roles()
+        game.attribute_game_roles()
         for player in player_lst:
             await player.discord.send(f"You are a {player.role}")
         await ctx.send("Please wait while the roles are resetting.")

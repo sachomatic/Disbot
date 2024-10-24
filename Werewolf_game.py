@@ -35,7 +35,8 @@ class Game:
 
         assert all(type(channel) is discord.TextChannel for channel in (self.peasant_channel, self.werewolf_channel, self.specials_channel))
 
-    def create_roles(self):
+    def attribute_game_roles(self):
+        print("Création des rôles")
         self.game_roles = {}
         if len(self.player_list) == 7:
             for role in self.spe_roles:
@@ -62,6 +63,7 @@ class Game:
             config = load(file)
 
     async def assign_roles(self, ctx: discord.ext.commands.Context):
+        print("Attribution des rôles discord")
         werewolf_channel = self.werewolf_channel
         specials_channel = self.specials_channel
 
@@ -92,6 +94,7 @@ class Game:
                 await player.discord.add_roles(r)
 
     async def reset(self, ctx: discord.ext.commands.Context):
+        print("Supression des rôles discord")
         overwrite = discord.PermissionOverwrite()
         overwrite.view_channel = False
 
@@ -315,18 +318,18 @@ class Game:
         return False
 
     def end_vote(self, reason=None):
-        dict = {}
-        for element in self.vote_list:
+        votes = {}
+        for player in self.vote_list:
             try:
-                dict[element] += 1
+                votes[player] += 1
             except:  # Quel exception ? Peut être important lors de tests
-                dict[element] = 1
+                votes[player] = 1
         max_value = max(dict.items())
-        for element in self.vote_list:
-            if dict[element] == max_value:
+        for player in self.vote_list:
+            if dict[player] == max_value:
                 break
         self.vote_list = []
-        return self.eliminate(element, reason)
+        return self.eliminate(player, reason)
 
     def get_element_by_attribute(
         self, list, attribute, match, output_attr=None, inversed=False):
