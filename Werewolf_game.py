@@ -24,11 +24,11 @@ class Game:
         self.night_day = None
 
         match self.channels:
-            case [TextChannel(channel)] if channel.name == "peasant":
+            case [discord.TextChannel(channel)] if channel.name == "peasant":
                 self.peasant_channel = channel
-            case [TextChannel(channel)] if channel.name == "werewolf":
+            case [discord.TextChannel(channel)] if channel.name == "werewolf":
                 self.werewolf_channel = channel
-            case [TextChannel(channel)] if channel.name == "specials":
+            case [discord.TextChannel(channel)] if channel.name == "specials":
                 self.specials_channel = channel
 
         # for channel in self.channels:
@@ -99,7 +99,7 @@ class Game:
             else:
                 await player.discord.add_roles(r)
 
-    async def reset(self, ctx: Context):
+    async def reset(self, ctx: discord.Context):
         overwrite = discord.PermissionOverwrite()
         overwrite.view_channel = False
 
@@ -136,7 +136,7 @@ class Game:
             except:  # Quel exception ? Peut être important lors de tests
                 pass
 
-    async def start(self, ctx: Context):
+    async def start(self, ctx: discord.Context):
         while True:
             self.kill_dict = {}
             self.night_day = "night"
@@ -148,7 +148,7 @@ class Game:
             if await self.day(ctx) is False:
                 break
 
-    async def night(self, ctx: Context):
+    async def night(self, ctx: discord.Context):
         import time
         import asyncio
 
@@ -274,7 +274,7 @@ class Game:
             return False
         return True
 
-    async def day(self, ctx: Context):
+    async def day(self, ctx: discord.Context):
         import asyncio
 
         await self.peasant_channel.send(
@@ -362,7 +362,7 @@ class Player:
         self.name = name
         self.discord = discord
         self.state = True
-        self.role: Optional[str] = None
+        self.role: str | None = None
         self.enamored = False
 
     async def kill(self, specials_channel: discord.TextChannel):
