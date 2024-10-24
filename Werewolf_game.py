@@ -1,9 +1,12 @@
-from typing import Sequence
+from typing import Optional
 from discord import Guild, TextChannel
+import random
+import discord
+from tomllib import load
 
 
 class Game:
-    def __init__(self, player_list: list['Player'], server: Guild):
+    def __init__(self, player_list: list["Player"], server: Guild):
         # liste des joueurs, des rôles,des votes, et des morts
         self.player_list = player_list
         self.spe_roles = ["president", "cupidon", "hunter", "witch", "stealer"]
@@ -16,21 +19,27 @@ class Game:
         self.channels = server.channels
         self.night_day = None
 
-        for channel in self.channels:
-            match channel.name:
-                case "peasant":
-                    assert type(channel) is TextChannel
-                    self.peasant_channel = channel
-                case "werewolf":
-                    assert type(channel) is TextChannel
-                    self.werewolf_channel = channel
-                case "specials":
-                    assert type(channel) is TextChannel
-                    self.specials_channel = channel
+        match self.channels:
+            case [TextChannel(channel)] if channel.name == "peasant":
+                self.peasant_channel = channel
+            case [TextChannel(channel)] if channel.name == "werewolf":
+                self.werewolf_channel = channel
+            case [TextChannel(channel)] if channel.name == "specials":
+                self.specials_channel = channel
+
+        # for channel in self.channels:
+        #    match channel.name:
+        #        case "peasant":
+        #            assert type(channel) is TextChannel
+        #            self.peasant_channel = channel
+        #        case "werewolf":
+        #            assert type(channel) is TextChannel
+        #            self.werewolf_channel = channel
+        #        case "specials":
+        #            assert type(channel) is TextChannel
+        #            self.specials_channel = channel
 
     def create_roles(self):
-        import random
-
         self.game_roles = {}
         if len(self.player_list) == 7:
             for role in self.spe_roles:
@@ -50,13 +59,10 @@ class Game:
             self.player_list[6].role = role_spe2
 
     def adv_create_role(self):
-        import random
-
-        self.game_roles = {"werewolf": (), "peasant": ()}
+        with open(".\werewolfes.toml") as file:
+            config = load(file)
 
     async def assign_roles(self, ctx):
-        import random, discord
-
         werewolf_channel = self.werewolf_channel
         specials_channel = self.specials_channel
 
@@ -88,8 +94,6 @@ class Game:
                 await player.discord.add_roles(r)
 
     async def reset(self, ctx):
-        import discord, random
-
         overwrite = discord.PermissionOverwrite()
         overwrite.view_channel = False
 
@@ -127,29 +131,30 @@ class Game:
             try:
                 if response:
                     break
-            except:
+            except:  # Quel exception ? Peut être important lors de tests
                 pass
 
     async def start(self, ctx):
         while True:
             self.kill_dict = {}
             self.night_day = "night"
-            if await self.night(ctx) == False:
+            if await self.night(ctx) is False:
                 break
             self.kill_dict = {}
             self.night_day = "day"
-            if await self.day(ctx) == False:
+            if await self.day(ctx) is False:
                 break
 
     async def night(self, ctx):
-        import time, asyncio, random
+        import time
+        import asyncio
 
         global response
 
         await ctx.send("The village is now asleep.")
         time.sleep(2)
         for player in self.player_list:
-            if player.state == True:
+            if player.state is True:
                 player.state = 0
                 if player.role == "werewolf":
                     await self.werewolf_channel.send(
@@ -184,7 +189,7 @@ class Game:
                             await lover2.discord.send(
                                 f"Congratulations, you are in love with {lover1.name}"
                             )
-                        except:
+                        except:  # Quel exception ? Peut être important lors de tests
                             await self.peasant_channel.send(
                                 f"Cupidon was tired due to its nightshift, and made ghost fall in love : {lover1_} and {lover2_}"
                             )
@@ -205,7 +210,7 @@ class Game:
                             stealed2 = self.get_element_by_attribute(
                                 self.player_list, "name", stealed
                             )[0]
-                        except:
+                        except:  # Quel exception ? Peut être important lors de tests
                             await self.specials_channel.send(
                                 "No one has this name. But I am nice, and I will exchange your role with a random person."
                             )
@@ -252,7 +257,7 @@ class Game:
                             f"{player.discord.mention} You were too tired and did nothing."
                         )
         rep = self.end_vote()
-        if rep == False:
+        if rep is False:
             await ctx.send(
                 f"The Werewolves were definitely drunk, and tried to vote for a ghost : {rep}"
             )
@@ -268,21 +273,21 @@ class Game:
         werewolves_count = 0
         other_count = 0
         for w in werewolves:
-            if w.state == True:
+            if w.state is True:
                 werewolves_count += 1
         for o in other:
-            if o.state == True:
+            if o.state is True:
                 other_count += 1
         if werewolves_count == 0:
             await self.peasant_channel.send(
-                f"@everyone The game is finished, and the peasants winned :"
+                "@everyone The game is finished, and the peasants winned :"
             )
             for o in other:
                 await self.peasant_channel.send(o.name)
             return False
         elif werewolves_count >= other_count:
             await self.peasant_channel.send(
-                f"@everyone The game is finished, and the werewolves winned :"
+                "@everyone The game is finished, and the werewolves winned :"
             )
             for w in werewolves:
                 await self.peasant_channel.send(w.name)
@@ -303,7 +308,7 @@ class Game:
             )
         else:
             await self.peasant_channel.send(
-                f"You have 1 minute to vote with the command !vote player_name."
+                "You have 1 minute to vote with the command !vote player_name."
             )
         asyncio.sleep(60)
         self.peasant_channel.send("The vote is now finished.")
@@ -316,8 +321,8 @@ class Game:
 
     def eliminate(self, voted, reason=None):
         for player in self.player_list:
-            if player.name == voted and player.state == True:
-                if player.enamored == True:
+            if player.name == voted and player.state is True:
+                if player.enamored is True:
                     for player in self.get_element_by_attribute(
                         self.player_list, "enamored", True
                     ):
@@ -339,7 +344,7 @@ class Game:
         for element in self.vote_list:
             try:
                 dict[element] += 1
-            except:
+            except:  # Quel exception ? Peut être important lors de tests
                 dict[element] = 1
         max_value = max(dict.items())
         for element in self.vote_list:
@@ -352,7 +357,7 @@ class Game:
         self, list, attribute, match, output_attr=None, inversed=False
     ):
         output = []
-        if inversed == False:
+        if inversed is False:
             for element in list:
                 if getattr(element, attribute) == match:
                     if output_attr:
@@ -375,13 +380,13 @@ class Player:
         self.name = name
         self.discord = discord
         self.state = True
-        self.role = None
+        self.role: Optional[str] = None
         self.enamored = False
 
     async def kill(self, specials_channel: TextChannel):
         import asyncio
-        assert type(specials_channel) is TextChannel
-        if self.state != False:
+
+        if self.state is True:
             self.state = False
             if self.role == "hunter":
                 self.state = 0
@@ -406,5 +411,5 @@ class Player:
             try:
                 if response:
                     break
-            except:
+            except:  # Quel exception ? Peut être important lors de tests
                 pass
