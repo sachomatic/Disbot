@@ -353,6 +353,7 @@ async def stop_game(ctx):
 
 @bot.command("hello")
 async def dm_me(ctx,*args,**kwargs):
+	await ctx.send("Sorry, this command does nothing for now")
 	print(ctx.author.id)
 
 @bot.command(name='join')
