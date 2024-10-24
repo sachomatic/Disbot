@@ -1,5 +1,10 @@
 # bot.py
-import os, time, datetime, logging, asyncio, discord
+import os
+import time
+import datetime
+import logging
+import asyncio
+import discord
 from discord.ext import commands
 from dotenv import load_dotenv
 from Werewolf_game import Game, Player
@@ -84,7 +89,7 @@ async def create_game(ctx: commands.Context, *args, **kwargs):
     # On attends une minute pour que les jouers rejoignent, puis on lance la partie
     for i in range(60):
         await asyncio.sleep(1)
-        if game_start == False:
+        if game_start is False:
             return
     await start_game(ctx)
 
@@ -97,7 +102,7 @@ async def start_game(ctx: commands.Context, *args, **kwargs):
     global player_lst
     global game
     try:
-        if game_start != True:
+        if game_start is True:
             await ctx.send("Game is not created. Please use !create_game.")
             return
         else:
@@ -115,7 +120,7 @@ async def start_game(ctx: commands.Context, *args, **kwargs):
             try:
                 # Les rôles de la partie précédente, si ils existent, sont retirés
                 await game.reset(ctx)
-            except:
+            except: # Quel exception ? Peut être important lors de tests
                 await ctx.send(
                     "Error : roles couldn't be resetted, game will continue but might crash"
                 )
@@ -125,7 +130,7 @@ async def start_game(ctx: commands.Context, *args, **kwargs):
             await game.start(ctx)
 
     except NameError as error:
-        await ctx.send(f"Game is not created. Please use !create_game.")
+        await ctx.send("Game is not created. Please use !create_game.")
         logging.exception("")
         return
     except KeyError:
@@ -154,10 +159,8 @@ async def get_roles():
                 if role.name in roles_list:
                     fn_roles_list.append(role)
             return fn_roles_list
-    except:
+    except: # Quel exception ? Peut être important lors de tests
         return False
-
-
 # Commandes pour les rôles spéciaux (autre que les villageois)
 
 
@@ -165,7 +168,7 @@ async def get_roles():
 async def kill(ctx: commands.Context, *args, **kwargs):
     global game
     # on vérifie que la partie est crée
-    if not "game" in globals():
+    if "game" not in globals():
         await ctx.send("Game is not created")
         return
     # obtention des noms des loup garou
@@ -183,7 +186,7 @@ async def kill(ctx: commands.Context, *args, **kwargs):
                 # obtention du jouer pour lequel le loup garou a voté
                 name = args[0]
                 await ctx.send(f"Voted for {name}")
-            except:
+            except: # Quel exception ? Peut être important lors de tests
                 await ctx.send("Player name missing.")
                 return
             # La partie est en suspension en attendant (il y a un timeout) que les loups garou votent
@@ -191,7 +194,7 @@ async def kill(ctx: commands.Context, *args, **kwargs):
             await game.transfer_response(name)
         else:
             await ctx.send("You are dead.")
-    except:
+    except: # Quel exception ? Peut être important lors de tests
         await ctx.send("You are not a werewolf.")
 
 
@@ -199,7 +202,7 @@ async def kill(ctx: commands.Context, *args, **kwargs):
 async def enamorate(ctx: commands.Context, *args, **kwargs):
     global game
     # on vérifie que la partie est crée
-    if not "game" in globals():
+    if "game" not in globals():
         await ctx.send("Game is not created")
         return
     # Obtention du joueur
@@ -230,7 +233,7 @@ async def enamorate(ctx: commands.Context, *args, **kwargs):
 async def steal(ctx: commands.Context, *args, **kwargs):
     global game
     # on vérifie que la partie est crée
-    if not "game" in globals():
+    if "game" not in globals():
         await ctx.send("Game is not created")
         return
     player = game.get_element_by_attribute(game.player_list, "role", "stealer", "name")[
@@ -248,7 +251,7 @@ async def steal(ctx: commands.Context, *args, **kwargs):
                 # on transfère les données
                 await game.transfer_response(stealed)
         # Si le joueur n'a pas fourni d'arguments, sa réponse est invalidée
-        except:
+        except: # Quel exception ? Peut être important lors de tests
             await ctx.send("No player chosen.")
             return
     else:
@@ -259,7 +262,7 @@ async def steal(ctx: commands.Context, *args, **kwargs):
 async def hunt(ctx: commands.Context, *args, **kwargs):
     global game
     # on vérifie que la partie est crée
-    if not "game" in globals():
+    if "game" not in globals():
         await ctx.send("Game is not created")
         return
     player = game.get_element_by_attribute(game.player_list, "role", "hunt")[0]
@@ -275,7 +278,7 @@ async def hunt(ctx: commands.Context, *args, **kwargs):
                 # on transfère les données
                 await game.transfer_response(hunted)
         # Si le joueur n'a pas fourni d'arguments, sa réponse est invalidée
-        except:
+        except: # Quel exception ? Peut être important lors de tests
             await ctx.send("No player chosen.")
             return
     else:
@@ -286,7 +289,7 @@ async def hunt(ctx: commands.Context, *args, **kwargs):
 async def save(ctx: commands.Context, *args, **kwargs):
     global game
     # on vérifie que la partie est crée
-    if not "game" in globals():
+    if "game" not in globals():
         await ctx.send("Game is not created")
         return
     player = game.get_element_by_attribute(game.player_list, "role", "witch")[0]
@@ -301,7 +304,7 @@ async def save(ctx: commands.Context, *args, **kwargs):
 @bot.command(name="poison")
 async def poison(ctx: commands.Context, *args, **kwargs):
     global game
-    if not "game" in globals():
+    if "game" not in globals():
         await ctx.send("Game is not created")
         return
     player = game.get_element_by_attribute(game.player_list, "role", "witch", "name")[0]
@@ -328,14 +331,14 @@ async def poison(ctx: commands.Context, *args, **kwargs):
 async def vote(ctx: commands.Context, *args, **kwargss):
     global game
     # on vérifie que la partie est crée
-    if not "game" in globals():
+    if "game" not in globals():
         await ctx.send("Game is not created")
         return
     user = game.get_element_by_attribute(
         game.player_list, "name", ctx.author.display_name
     )
     # On vérifie que le joueur est vivant et que c'est le jour
-    if user.state == True:
+    if user.state is True:
         if game.night_day == "day":
             try:
                 voted = args[0]
@@ -361,20 +364,20 @@ async def setup(ctx: commands.Context):
     for channel in ctx.guild.channels:
         if str(channel) == "werewolf":
             ver = True
-    if ver == False:
+    if ver is False:
         await ctx.guild.create_text_channel("werewolf")
     ver = False
     for channel in ctx.guild.channels:
         if str(channel) == "village":
             ver = True
-    if ver == False:
+    if ver is False:
         await ctx.guild.create_text_channel("village")
     for role in temp.spe_roles:
         temp_ver = False
         for channel in ctx.guild.channels:
             if str(channel) == role:
                 temp_ver = True
-        if temp_ver == False:
+        if temp_ver is False:
             await ctx.send(f"Creating {role}")
             await ctx.guild.create_text_channel(role)
         else:
@@ -448,7 +451,7 @@ async def delete_all_messages(ctx: commands.Context, *args, **kwargs):
             if cancel:
                 cancel = None
                 break
-        except:
+        except: # Quel exception ? Peut être important lors de tests
             pass
     await ctx.send("Finished", delete_after=5)
     # except Limi:
