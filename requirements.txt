@@ -1,2 +1,2 @@
-discord
-dotenv
+discord.py
+python-dotenv
