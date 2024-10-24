@@ -1,5 +1,6 @@
 from typing import Optional
 from discord import Guild, TextChannel
+from discord.ext.commands import Context
 import random
 import discord
 from tomllib import load
@@ -62,7 +63,7 @@ class Game:
         with open(".\werewolfes.toml") as file:
             config = load(file)
 
-    async def assign_roles(self, ctx):
+    async def assign_roles(self, ctx: Context):
         werewolf_channel = self.werewolf_channel
         specials_channel = self.specials_channel
 
@@ -93,7 +94,7 @@ class Game:
             else:
                 await player.discord.add_roles(r)
 
-    async def reset(self, ctx):
+    async def reset(self, ctx: Context):
         overwrite = discord.PermissionOverwrite()
         overwrite.view_channel = False
 
@@ -134,7 +135,7 @@ class Game:
             except:  # Quel exception ? Peut être important lors de tests
                 pass
 
-    async def start(self, ctx):
+    async def start(self, ctx: Context):
         while True:
             self.kill_dict = {}
             self.night_day = "night"
@@ -145,7 +146,7 @@ class Game:
             if await self.day(ctx) is False:
                 break
 
-    async def night(self, ctx):
+    async def night(self, ctx: Context):
         import time
         import asyncio
 
@@ -294,7 +295,7 @@ class Game:
             return False
         return True
 
-    async def day(self, ctx):
+    async def day(self, ctx: Context):
         import asyncio
 
         await self.peasant_channel.send(
