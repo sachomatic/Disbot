@@ -1,5 +1,9 @@
+from typing import Sequence
+from discord import Guild, TextChannel
+
+
 class Game:
-    def __init__(self, player_list, server):
+    def __init__(self, player_list: list[object], server: Guild):
         # liste des joueurs, des rôles,des votes, et des morts
         self.player_list = player_list
         self.spe_roles = ["president", "cupidon", "hunter", "witch", "stealer"]
@@ -10,18 +14,19 @@ class Game:
         # serveur
         self.server = server
         self.channels = server.channels
-        self.peasant_channel = None
-        self.werewolf_channel = None
-        self.specials_channel = None
         self.night_day = None
 
         for channel in self.channels:
-            if channel.name == "village":
-                self.peasant_channel = channel
-            elif channel.name == "werewolf":
-                self.werewolf_channel = channel
-            elif channel.name == "specials":
-                self.specials_channel = channel
+            match channel.name:
+                case "peasant":
+                    assert type(channel) is TextChannel
+                    self.peasant_channel = channel
+                case "werewolf":
+                    assert type(channel) is TextChannel
+                    self.werewolf_channel = channel
+                case "specials":
+                    assert type(channel) is TextChannel
+                    self.specials_channel = channel
 
     def create_roles(self):
         import random
@@ -43,6 +48,11 @@ class Game:
             self.player_list[4].role = "peasant"
             self.player_list[5].role = role_spe1
             self.player_list[6].role = role_spe2
+
+    def adv_create_role(self):
+        import random
+
+        self.game_roles = {"werewolf": (), "peasant": ()}
 
     async def assign_roles(self, ctx):
         import random, discord
@@ -368,9 +378,9 @@ class Player:
         self.role = None
         self.enamored = False
 
-    async def kill(self, specials_channel=None):
+    async def kill(self, specials_channel: TextChannel):
         import asyncio
-
+        assert type(specials_channel) is TextChannel
         if self.state != False:
             self.state = False
             if self.role == "hunter":

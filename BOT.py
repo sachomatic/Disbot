@@ -8,7 +8,7 @@ from Werewolf_game import Game, Player
 Ceci est une tentative du jeu du loup garou sur un bot discord.
 Toutes les fonctions doivent être asynchrones
 
-ctx : contexte discord, dans notre cas, c'est les messages appellant la fonction.
+ctx: command.Context -> contexte discord, dans notre cas, c'est les messages appellant la fonction.
 	.send() : envoyer dans le channel où le message a été envoyé
 	.guild : le serveur du message
 	.author : l'auteur du message
@@ -61,18 +61,18 @@ og_hours = datetime.datetime.now().hour
 og_minutes = datetime.datetime.now().minute
 
 
-def get_decimal_numbers(number):
+def get_decimal_numbers(number: float):
     # Obtenir les chiffres décimaux d'un flottant
     number_str = str(number)
     decimal_index = number_str.find(".")
     if decimal_index == -1:
-        return ""
+        return 0.0
 
     return float(number_str[decimal_index:])
 
 
 @bot.command(name="create_game")
-async def create_game(ctx, *args, **kwargs):
+async def create_game(ctx: commands.Context, *args, **kwargs):
     # La fonction pour commencer une partie
     global game_start
     global player_lst
@@ -90,7 +90,8 @@ async def create_game(ctx, *args, **kwargs):
 
 
 @bot.command(name="start")
-async def start_game(ctx, *args, **kwargs):
+async def start_game(ctx: commands.Context, *args, **kwargs):
+    assert ctx.guild is not None
     # Lancer la partie, peut être appelé avant la fin du timer
     global game_start
     global player_lst
@@ -161,7 +162,7 @@ async def get_roles():
 
 
 @bot.command(name="kill")
-async def kill(ctx, *args, **kwargs):
+async def kill(ctx: commands.Context, *args, **kwargs):
     global game
     # on vérifie que la partie est crée
     if not "game" in globals():
@@ -195,7 +196,7 @@ async def kill(ctx, *args, **kwargs):
 
 
 @bot.command(name="enamorate")
-async def enamorate(ctx, *args, **kwargs):
+async def enamorate(ctx: commands.Context, *args, **kwargs):
     global game
     # on vérifie que la partie est crée
     if not "game" in globals():
@@ -226,7 +227,7 @@ async def enamorate(ctx, *args, **kwargs):
 
 
 @bot.command(name="steal")
-async def steal(ctx, *args, **kwargs):
+async def steal(ctx: commands.Context, *args, **kwargs):
     global game
     # on vérifie que la partie est crée
     if not "game" in globals():
@@ -255,7 +256,7 @@ async def steal(ctx, *args, **kwargs):
 
 
 @bot.command("hunt")
-async def hunt(ctx, *args, **kwargs):
+async def hunt(ctx: commands.Context, *args, **kwargs):
     global game
     # on vérifie que la partie est crée
     if not "game" in globals():
@@ -282,7 +283,7 @@ async def hunt(ctx, *args, **kwargs):
 
 
 @bot.command(name="save")
-async def steal(ctx, *args, **kwargs):
+async def save(ctx: commands.Context, *args, **kwargs):
     global game
     # on vérifie que la partie est crée
     if not "game" in globals():
@@ -298,7 +299,7 @@ async def steal(ctx, *args, **kwargs):
 
 
 @bot.command(name="poison")
-async def steal(ctx, *args, **kwargs):
+async def poison(ctx: commands.Context, *args, **kwargs):
     global game
     if not "game" in globals():
         await ctx.send("Game is not created")
@@ -324,7 +325,7 @@ async def steal(ctx, *args, **kwargs):
 
 
 @bot.command(name="vote")
-async def vote(ctx, *args, **kwargss):
+async def vote(ctx: commands.Context, *args, **kwargss):
     global game
     # on vérifie que la partie est crée
     if not "game" in globals():
@@ -351,9 +352,10 @@ async def vote(ctx, *args, **kwargss):
 
 # commande pour préparer le jeu, à n'éxécuter qu'une fois pour chaque serveur
 @bot.command(name="setup")
-async def setup(ctx):
+async def setup(ctx: commands.Context):
+    assert ctx.guild is not None
     await ctx.send("Setting up")
-    temp = Game("me", ctx.guild)
+    temp = Game(["me"], ctx.guild)
     await ctx.send("Creating channels...")
     ver = False
     for channel in ctx.guild.channels:
@@ -377,8 +379,8 @@ async def setup(ctx):
             await ctx.guild.create_text_channel(role)
         else:
             await ctx.send(f"{role} is already created.")
-    # for i in range(1,10):
-    # await create_role(ctx,i)
+    # for i in range(1, 10):
+    # await create_role(ctx, i)
     await ctx.send("done")
     guild = ctx.guild
 
@@ -391,19 +393,19 @@ async def stop_game(ctx):
 
 
 @bot.command("hello")
-async def dm_me(ctx, *args, **kwargs):
+async def dm_me(ctx: commands.Context, *args, **kwargs):
     print(ctx.author.id)
 
 
 @bot.command(name="join")
-async def join_list(ctx, *args, **kwargs):
+async def join_list(ctx: commands.Context, *args, **kwargs):
     global player_lst
     player_lst.append(Player(ctx.author.display_name, ctx.author))
     await ctx.send(f"{ctx.author} just joined the game!")
 
 
 @bot.command(name="fill")
-async def fill_game(ctx, *args, **kwargs):
+async def fill_game(ctx: commands.Context, *args, **kwargs):
     global player_lst
     try:
         fill_number = int(args[0])
@@ -414,22 +416,22 @@ async def fill_game(ctx, *args, **kwargs):
 
 
 @bot.command(name="see_commands")
-async def show_commands(ctx, *args, **kwargs):
+async def show_commands(ctx: commands.Context, *args, **kwargs):
     """
     Command to see all the commands
     """
     for cmd in bot.commands:
-        await ctx.send(cmd)
+        await ctx.send(cmd.name)
 
 
 @bot.command(name="stop_bot")
-async def stop_bot(ctx, *args, **kwargs):
+async def stop_bot(ctx: commands.Context, *args, **kwargs):
     await ctx.send("Stopping...")
     quit()
 
 
 @bot.command(name="delete_all")
-async def delete_all_messages(ctx, *args, **kwargs):
+async def delete_all_messages(ctx: commands.Context, *args, **kwargs):
     global cancel
     count = 0
     await ctx.send("DELETING ALL MESSAGE @everyone. Type !cancel to cancel.")
@@ -454,7 +456,8 @@ async def delete_all_messages(ctx, *args, **kwargs):
 
 
 @bot.command(name="test")
-async def test(ctx, *args, **kwargs):
+async def test(ctx: commands.Context, *args, **kwargs):
+    assert ctx.guild is not None
     local_time = time.time() - og_time
     t_hours = local_time / 60 / 60
     tampon = get_decimal_numbers(t_hours)
@@ -487,4 +490,5 @@ async def on_message(ctx):
 				else:
 					await ctx.send("Le jouer n'a pas été trouvé. Veuillez réessayer.")
 """
+
 bot.run(TOKEN)
