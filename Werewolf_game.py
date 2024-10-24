@@ -25,12 +25,12 @@ class Game:
         self.channels = server.channels
         self.night_day = None
 
-        match self.channels:
-            case [discord.TextChannel(channel)] if channel.name == "peasant":
+        for channel in self.channels:
+            if channel.name == "peasant":
                 self.peasant_channel = channel
-            case [discord.TextChannel(channel)] if channel.name == "werewolf":
+            if channel.name == "werewolf":
                 self.werewolf_channel = channel
-            case [discord.TextChannel(channel)] if channel.name == "specials":
+            if channel.name == "specials":
                 self.specials_channel = channel
 
         # for channel in self.channels:
