@@ -3,7 +3,7 @@ from discord import Guild, TextChannel
 
 
 class Game:
-    def __init__(self, player_list: list[object], server: Guild):
+    def __init__(self, player_list: list['Player'], server: Guild):
         # liste des joueurs, des rôles,des votes, et des morts
         self.player_list = player_list
         self.spe_roles = ["president", "cupidon", "hunter", "witch", "stealer"]
