@@ -119,7 +119,7 @@ async def start_game(ctx: commands.Context, *args, **kwargs):
         try:
             # Les rôles de la partie précédente, si ils existent, sont retirés
             await game.reset(ctx)
-        except: # Quel exception ? Peut être important lors de tests
+        except:  # Quel exception ? Peut être important lors de tests
             await ctx.send(
                 "Error : roles couldn't be resetted, game will continue but might crash"
             )
@@ -158,8 +158,10 @@ async def get_roles():
                 if role.name in roles_list:
                     fn_roles_list.append(role)
             return fn_roles_list
-    except: # Quel exception ? Peut être important lors de tests
+    except:  # Quel exception ? Peut être important lors de tests
         return False
+
+
 # Commandes pour les rôles spéciaux (autre que les villageois)
 
 
@@ -185,7 +187,7 @@ async def kill(ctx: commands.Context, *args, **kwargs):
                 # obtention du jouer pour lequel le loup garou a voté
                 name = args[0]
                 await ctx.send(f"Voted for {name}")
-            except: # Quel exception ? Peut être important lors de tests
+            except:  # Quel exception ? Peut être important lors de tests
                 await ctx.send("Player name missing.")
                 return
             # La partie est en suspension en attendant (il y a un timeout) que les loups garou votent
@@ -193,7 +195,7 @@ async def kill(ctx: commands.Context, *args, **kwargs):
             await game.transfer_response(name)
         else:
             await ctx.send("You are dead.")
-    except: # Quel exception ? Peut être important lors de tests
+    except:  # Quel exception ? Peut être important lors de tests
         await ctx.send("You are not a werewolf.")
 
 
@@ -250,7 +252,7 @@ async def steal(ctx: commands.Context, *args, **kwargs):
                 # on transfère les données
                 await game.transfer_response(stealed)
         # Si le joueur n'a pas fourni d'arguments, sa réponse est invalidée
-        except: # Quel exception ? Peut être important lors de tests
+        except:  # Quel exception ? Peut être important lors de tests
             await ctx.send("No player chosen.")
             return
     else:
@@ -277,7 +279,7 @@ async def hunt(ctx: commands.Context, *args, **kwargs):
                 # on transfère les données
                 await game.transfer_response(hunted)
         # Si le joueur n'a pas fourni d'arguments, sa réponse est invalidée
-        except: # Quel exception ? Peut être important lors de tests
+        except:  # Quel exception ? Peut être important lors de tests
             await ctx.send("No player chosen.")
             return
     else:
@@ -382,13 +384,13 @@ async def setup(ctx: commands.Context):
         else:
             await ctx.send(f"{role} is already created.")
     # for i in range(1, 10):
-    # await create_role(ctx, i)
+    #     await create_role(ctx, i)
     await ctx.send("done")
     guild = ctx.guild
 
 
 @bot.command(name="cancel")
-async def stop_game(ctx):
+async def stop_game(ctx: commands.Context):
     global game_start
     game_start = False
     await ctx.send("Game stopped")
@@ -450,11 +452,11 @@ async def delete_all_messages(ctx: commands.Context, *args, **kwargs):
             if cancel:
                 cancel = None
                 break
-        except: # Quel exception ? Peut être important lors de tests
+        except:  # Quel exception ? Peut être important lors de tests
             pass
     await ctx.send("Finished", delete_after=5)
     # except Limi:
-    # await ctx.send("Rate limit reached. Try again later.")
+    #     await ctx.send("Rate limit reached. Try again later.")
 
 
 @bot.command(name="test")
