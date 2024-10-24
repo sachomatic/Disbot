@@ -59,8 +59,9 @@ class Game:
             self.player_list[6].role = role_spe2
 
     def adv_create_role(self):
-        with open(".\werewolfes.toml") as file:
+        with open("werewolfes.toml") as file:
             config = load(file)
+        raise NotImplementedError
 
     async def assign_roles(self, ctx: discord.ext.commands.Context):
         print("Attribution des rôles discord")
@@ -113,6 +114,8 @@ class Game:
                 try:
                     await user.discord.remove_roles(role)
                 except Exception as error:
+                    if type(error) in KeyboardInterrupt:
+                        raise KeyboardInterrupt
                     print(error)
 
     async def transfer_response(self, r):
