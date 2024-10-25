@@ -57,6 +57,7 @@ class Game:
             self.player_list[6].role = role_spe2
 
     def adv_create_role(self):
+        # Experimental
         with open("werewolfes.toml") as file:
             config = load(file)
         raise NotImplementedError
@@ -133,7 +134,7 @@ class Game:
             try:
                 if response:
                     break
-            except:  # Quel exception ? Peut être important lors de tests
+            except Exception:
                 pass
 
     async def start(self, ctx: discord.ext.commands.Context):
@@ -188,7 +189,7 @@ class Game:
                             await lover2.discord.send(
                                 f"Congratulations, you are in love with {lover1.name}"
                             )
-                        except:  # Quel exception ? Peut être important lors de tests
+                        except Exception:
                             await self.peasant_channel.send(
                                 f"Cupidon was tired due to its nightshift, and made ghost fall in love : {lover1_} and {lover2_}")
                         response = None
@@ -204,7 +205,7 @@ class Game:
                         try:
                             print(stealed)
                             stealed2 = self.get_element_by_attribute(self.player_list, "name", stealed)[0]
-                        except:
+                        except Exception:
                             await self.specials_channel.send(
                                 "No one has this name. But I am nice, and I will exchange your role with a random person.")
                             stealed2 = random.choice(self.player_list)
@@ -396,5 +397,5 @@ class Player:
             try:
                 if response:
                     break
-            except:  # Quel exception ? Peut être important lors de tests
+            except Exception
                 pass

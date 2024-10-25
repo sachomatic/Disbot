@@ -122,7 +122,7 @@ async def start_game(ctx: commands.Context, *args, **kwargs):
         try:
             # Les rôles de la partie précédente, si ils existent, sont retirés
             await game.reset(ctx)
-        except:  # Quel exception ? Peut être important lors de tests
+        except Exception:
             await ctx.send(
                 "Error : roles couldn't be resetted, game will continue but might crash"
             )
@@ -131,14 +131,14 @@ async def start_game(ctx: commands.Context, *args, **kwargs):
         await game.assign_roles(ctx)
         await game.start(ctx)
 
-    except NameError as error:
+    except NameError:
         await ctx.send("Game is not created. Please use !create_game.")
         logging.exception("")
         return
     except KeyError:
         logging.exception("")
         await ctx.send("Not enough players to start game")
-    except Exception as error:
+    except Exception:
         logging.exception("")
         await ctx.send(
             "An error occured, causing the game to crash. Please restart it.")
@@ -165,7 +165,7 @@ async def get_roles():
                 if role.name in roles_list:
                     fn_roles_list.append(role)
             return fn_roles_list
-    except:  # Quel exception ? Peut être important lors de tests
+    except Exception:
         return False
 
 
@@ -194,7 +194,7 @@ async def kill(ctx: commands.Context, *args, **kwargs):
                 # obtention du jouer pour lequel le loup garou a voté
                 name = args[0]
                 await ctx.send(f"Voted for {name}")
-            except:  # Quel exception ? Peut être important lors de tests
+            except Exception:
                 await ctx.send("Player name missing.")
                 return
             # La partie est en suspension en attendant (il y a un timeout) que les loups garou votent
@@ -202,7 +202,7 @@ async def kill(ctx: commands.Context, *args, **kwargs):
             await game.transfer_response(name)
         else:
             await ctx.send("You are dead.")
-    except:  # Quel exception ? Peut être important lors de tests
+    except Exception:
         await ctx.send("You are not a werewolf.")
 
 
@@ -259,7 +259,7 @@ async def steal(ctx: commands.Context, *args, **kwargs):
                 # on transfère les données
                 await game.transfer_response(stealed)
         # Si le joueur n'a pas fourni d'arguments, sa réponse est invalidée
-        except:  # Quel exception ? Peut être important lors de tests
+        except Exception:
             await ctx.send("No player chosen.")
             return
     else:
@@ -286,7 +286,7 @@ async def hunt(ctx: commands.Context, *args, **kwargs):
                 # on transfère les données
                 await game.transfer_response(hunted)
         # Si le joueur n'a pas fourni d'arguments, sa réponse est invalidée
-        except:  # Quel exception ? Peut être important lors de tests
+        except Exception:
             await ctx.send("No player chosen.")
             return
     else:
@@ -423,7 +423,7 @@ async def fill_game(ctx: commands.Context, *args, **kwargs):
     global player_lst
     try:
         fill_number = int(args[0])
-    except:
+    except Exception:
         fill_number = 7
     for i in range(fill_number):
         await join_list(ctx)
@@ -462,7 +462,7 @@ async def delete_all_messages(ctx: commands.Context, *args, **kwargs):
             if cancel:
                 cancel = None
                 break
-        except:  # Quel exception ? Peut être important lors de tests
+        except Exception:
             pass
     await ctx.send("Finished", delete_after=5)
     # except Limi:
