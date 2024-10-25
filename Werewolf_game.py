@@ -393,5 +393,5 @@ class Player:
             try:
                 if response:
                     break
-            except Exception
+            except Exception:
                 pass
