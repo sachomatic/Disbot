@@ -8,8 +8,6 @@ import discord.ext.commands
 
 class Game:
     # liste des joueurs, des rôles, des votes, et des morts
-    #TES MODIFS RENDENT JUSTE LE CODE PLUS BEAU, MAIS C'EST ILLISIBLE*
-    #SI TU VEUX RENDRE LE CODE LISIBLE, AERE ET COMMENTE
     def __init__(self, player_list: list["Player"], server: discord.Guild):
         # liste des joueurs, des rôles,des votes, et des morts
         self.player_list = player_list
@@ -63,47 +61,53 @@ class Game:
             config = load(file)
         raise NotImplementedError
 
+    async def get_game_roles(ctx: discord.ext.commands.Context):
+        roles = list(ctx.guild.roles)
+        
+        for role in roles:
+            if role.name not in ["1","2","3","4","5","6","7","8","9"]:
+                roles.remove(role)
+                print(f"Removed role {role} from roles")
+        random.shuffle(roles)
+        print(f"Keeping roles :")
+        for prnt_role in roles:
+            print(prnt_role.name,end=", ")
+        print("")
+        return roles
+
     async def assign_roles(self, ctx: discord.ext.commands.Context):
         print("Attributing roles")
         werewolf_channel = self.werewolf_channel
         specials_channel = self.specials_channel
 
-        roles = list(ctx.guild.roles)
-        print(roles)
-        
-        for element in roles:
-            if element.name not in ["1","2","3","4","5","6","7","8","9"]:
-                roles.remove(element)
-        random.shuffle(roles)
-        print(roles)
+        roles = await self.get_game_roles()
 
         for index, player in enumerate(self.player_list):
             r = roles[index]
-            if player.role == "werewolf":
-                await player.discord.add_roles(r)
-                overwrite = discord.PermissionOverwrite()
-                overwrite.read_message_history = False
-                await werewolf_channel.set_permissions(r, overwrite=overwrite)
+            try:
+                if player.role == "werewolf":
+                    await player.discord.add_roles(r)
+                    overwrite = discord.PermissionOverwrite()
+                    overwrite.read_message_history = False
+                    await werewolf_channel.set_permissions(r, overwrite=overwrite)
 
-            if player.role in ["president", "cupidon", "hunter", "witch", "stealer"]:
-                await player.discord.add_roles(r)
-                overwrite = discord.PermissionOverwrite()
-                overwrite.read_message_history = False
-                await specials_channel.set_permissions(r, overwrite=overwrite)
-
-            else:
-                await player.discord.add_roles(r)
+                if player.role in ["president", "cupidon", "hunter", "witch", "stealer"]:
+                    await player.discord.add_roles(r)
+                    overwrite = discord.PermissionOverwrite()
+                    overwrite.read_message_history = False
+                    await specials_channel.set_permissions(r, overwrite=overwrite)
+                else:
+                    await player.discord.add_roles(r)
+            except Exception as error:
+                print(f"Can't assign role {r} to {player} : {error}")
+                raise Exception
 
     async def reset(self, ctx: discord.ext.commands.Context):
         print("Deleting roles on users")
         overwrite = discord.PermissionOverwrite()
         overwrite.view_channel = False
 
-        roles = list(ctx.guild.roles)
-        print(roles)
-        for element in roles:
-            if element.name not in ["1","2","3","4","5","6","7","8","9"]:
-                roles.remove(element)
+        roles = await self.get_game_roles()
 
         for role in roles:
             await self.werewolf_channel.set_permissions(role, overwrite=overwrite)
@@ -114,7 +118,7 @@ class Game:
                 try:
                     await user.discord.remove_roles(role)
                 except Exception as error:
-                    print(error)
+                    print(f"Couldn't remove {role} from {user.discord.name} : {error}")
 
     async def transfer_response(self, r):
         global response
