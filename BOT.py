@@ -84,7 +84,7 @@ async def create_game(ctx: commands.Context, *args, **kwargs):
     await ctx.send(
         "@everyone Starting game in 1 minute. Use !start to start now and !join to join the game! There must be at least 4 players to start the game and maximum 10 players"
     )
-    game_start = True
+    game_start = False
     player_lst = []
     # On attends une minute pour que les jouers rejoignent, puis on lance la partie
     for i in range(60):
@@ -101,11 +101,14 @@ async def start_game(ctx: commands.Context, *args, **kwargs):
     global game_start
     global player_lst
     global game
+    if player_lst == []:
+        await ctx.send("No one has joined, game is canceled.")
+        return
     if "game" in globals():
-        await ctx.send("Game already started.")
+        await ctx.send("Game was already started.")
         return
     try:
-        game_start = False
+        game_start = True
         # Game() est la classe qui gère la partie en cours
         game = Game(player_lst, ctx.guild)
         await ctx.send("@everyone Starting game with:", delete_after=5)
@@ -136,10 +139,12 @@ async def start_game(ctx: commands.Context, *args, **kwargs):
         logging.exception("")
         await ctx.send("Not enough players to start game")
     except Exception as error:
+        game_start = False
+        player_lst = []
         logging.exception("")
         await ctx.send(
-            "An error occured, causing the game to crash. Please restart it."
-        )
+            "An error occured, causing the game to crash. Please restart it.")
+        
 
 
 async def search_channel(name, server):
@@ -169,7 +174,7 @@ async def get_roles():
 async def kill(ctx: commands.Context, *args, **kwargs):
     global game
     # on vérifie que la partie est crée
-    if "game" not in globals():
+    if not game_start:
         await ctx.send("Game is not created")
         return
     # obtention des noms des loup garou
@@ -203,7 +208,7 @@ async def kill(ctx: commands.Context, *args, **kwargs):
 async def enamorate(ctx: commands.Context, *args, **kwargs):
     global game
     # on vérifie que la partie est crée
-    if "game" not in globals():
+    if not game_start:
         await ctx.send("Game is not created")
         return
     # Obtention du joueur
@@ -234,7 +239,7 @@ async def enamorate(ctx: commands.Context, *args, **kwargs):
 async def steal(ctx: commands.Context, *args, **kwargs):
     global game
     # on vérifie que la partie est crée
-    if "game" not in globals():
+    if not game_start:
         await ctx.send("Game is not created")
         return
     player = game.get_element_by_attribute(game.player_list, "role", "stealer", "name")[
@@ -263,7 +268,7 @@ async def steal(ctx: commands.Context, *args, **kwargs):
 async def hunt(ctx: commands.Context, *args, **kwargs):
     global game
     # on vérifie que la partie est crée
-    if "game" not in globals():
+    if not game_start:
         await ctx.send("Game is not created")
         return
     player = game.get_element_by_attribute(game.player_list, "role", "hunt")[0]
@@ -290,7 +295,7 @@ async def hunt(ctx: commands.Context, *args, **kwargs):
 async def save(ctx: commands.Context, *args, **kwargs):
     global game
     # on vérifie que la partie est crée
-    if "game" not in globals():
+    if not game_start:
         await ctx.send("Game is not created")
         return
     player = game.get_element_by_attribute(game.player_list, "role", "witch")[0]
@@ -305,7 +310,7 @@ async def save(ctx: commands.Context, *args, **kwargs):
 @bot.command(name="poison")
 async def poison(ctx: commands.Context, *args, **kwargs):
     global game
-    if "game" not in globals():
+    if not game_start:
         await ctx.send("Game is not created")
         return
     player = game.get_element_by_attribute(game.player_list, "role", "witch", "name")[0]
@@ -332,7 +337,7 @@ async def poison(ctx: commands.Context, *args, **kwargs):
 async def vote(ctx: commands.Context, *args, **kwargss):
     global game
     # on vérifie que la partie est crée
-    if "game" not in globals():
+    if not game_start:
         await ctx.send("Game is not created")
         return
     user = game.get_element_by_attribute(
@@ -404,6 +409,9 @@ async def dm_me(ctx: commands.Context, *args, **kwargs):
 @bot.command(name="join")
 async def join_list(ctx: commands.Context, *args, **kwargs):
     global player_lst
+    if "game" in globals():
+        await ctx.send("Sorry, the game is already started")
+        return
     player_lst.append(Player(ctx.author.display_name, ctx.author))
     await ctx.send(f"{ctx.author} just joined the game!")
 

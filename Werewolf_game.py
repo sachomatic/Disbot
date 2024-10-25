@@ -26,7 +26,7 @@ class Game:
         self.night_day = None
 
         for channel in self.channels:
-            if channel.name == "peasant":
+            if channel.name == "village":
                 self.peasant_channel = channel
             if channel.name == "werewolf":
                 self.werewolf_channel = channel
@@ -114,8 +114,6 @@ class Game:
                 try:
                     await user.discord.remove_roles(role)
                 except Exception as error:
-                    if type(error) in KeyboardInterrupt:
-                        raise KeyboardInterrupt
                     print(error)
 
     async def transfer_response(self, r):
@@ -237,6 +235,9 @@ class Game:
         if rep is False:
             await ctx.send(
                 f"The Werewolves were definitely drunk, and tried to vote for a ghost : {rep}")
+        elif rep == None:
+            await ctx.send(
+                f"It seems that there is no one in this game...")
         else:
             for killed in self.kill_dict.keys():
                 await ctx.send(
@@ -258,15 +259,13 @@ class Game:
                 other_count += 1
         if werewolves_count == 0:
             await self.peasant_channel.send(
-                "@everyone The game is finished, and the peasants winned :"
-            )
+                "@everyone The game is finished, and the peasants winned :")
             for o in other:
                 await self.peasant_channel.send(o.name)
             return False
         elif werewolves_count >= other_count:
             await self.peasant_channel.send(
-                "@everyone The game is finished, and the werewolves winned :"
-            )
+                "@everyone The game is finished, and the werewolves winned :")
             for w in werewolves:
                 await self.peasant_channel.send(w.name)
             return False
@@ -322,10 +321,12 @@ class Game:
 
     def end_vote(self, reason=None):
         votes = {}
+        if self.vote_list == []:
+            return None
         for player in self.vote_list:
             try:
                 votes[player] += 1
-            except:  # Quel exception ? Peut être important lors de tests
+            except KeyError: #Si le joueur n'a pas encore reçu de vote, alors son 'compte' est crée
                 votes[player] = 1
         max_value = max(dict.items())
         for player in self.vote_list:
