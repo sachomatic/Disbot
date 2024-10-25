@@ -139,11 +139,13 @@ async def start_game(ctx: commands.Context, *args, **kwargs):
         logging.exception("")
         await ctx.send("Not enough players to start game")
     except Exception:
-        game_start = False
-        player_lst = []
         logging.exception("")
         await ctx.send(
             "An error occured, causing the game to crash. Please restart it.")
+    finally:
+        game = None
+        game_start = False
+        player_lst = []
         
 
 
@@ -433,7 +435,7 @@ async def show_commands(ctx: commands.Context, *args, **kwargs):
     Command to see all the commands
     """
     for cmd in bot.commands:
-        await ctx.send(cmd.name)
+        await ctx.send("Deprecated, use !help")
 
 
 @bot.command(name="stop_bot")
