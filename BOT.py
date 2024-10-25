@@ -89,7 +89,7 @@ async def create_game(ctx: commands.Context, *args, **kwargs):
     # On attends une minute pour que les jouers rejoignent, puis on lance la partie
     for i in range(60):
         await asyncio.sleep(1)
-        if game_start is False:
+        if game_start:
             return
     await start_game(ctx)
 
@@ -111,7 +111,7 @@ async def start_game(ctx: commands.Context, *args, **kwargs):
         game_start = True
         # Game() est la classe qui gère la partie en cours
         game = Game(player_lst, ctx.guild)
-        await ctx.send("@everyone Starting game with:", delete_after=5)
+        await ctx.send("Starting game with:", delete_after=5)
         for pl in game.player_list:
             await ctx.send(f"-{pl.name}", delete_after=5)
         # Création des rôles (1-9) pour l'anonimat des rôles
@@ -121,14 +121,15 @@ async def start_game(ctx: commands.Context, *args, **kwargs):
         await ctx.send("Please wait while the roles are resetting.")
         try:
             # Les rôles de la partie précédente, si ils existent, sont retirés
-            await game.reset(ctx)
+            await game()
         except Exception:
+            logging.exception("")
             await ctx.send(
                 "Error : roles couldn't be resetted, game will continue but might crash"
             )
         await ctx.send("Let's go!")
         # attribution des rôles
-        await game.assign_roles(ctx)
+        await game.assign_roles()
         await game.start(ctx)
 
     except NameError:
@@ -247,7 +248,7 @@ async def steal(ctx: commands.Context, *args, **kwargs):
     player = game.get_element_by_attribute(game.player_list, "role", "stealer", "name")[
         0
     ]
-    # on vérifie que le jouer est vivant et qu'il est voleur
+    # on vérifie que le joueur est vivant et qu'il est voleur
     if ctx.author.display_name == player and player.state == 0:
         try:
             stealed = args[0]

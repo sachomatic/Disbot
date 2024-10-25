@@ -15,6 +15,8 @@ class Game:
         self.vote_list = []
         self.killed_list = {}
 
+        self.roles = self.get_game_roles(server)
+
         # nombre de tours
         self.round = 0
 
@@ -34,7 +36,7 @@ class Game:
         assert all(type(channel) is discord.TextChannel for channel in (self.peasant_channel, self.werewolf_channel, self.specials_channel))
 
     def attribute_game_roles(self):
-        print("Creating roles")
+        print("Attributing games roles to player")
         self.game_roles = {}
         if len(self.player_list) == 7:
             for role in self.spe_roles:
@@ -62,26 +64,24 @@ class Game:
             config = load(file)
         raise NotImplementedError
 
-    async def get_game_roles(ctx: discord.ext.commands.Context):
-        roles = list(ctx.guild.roles)
-        
-        for role in roles:
-            if role.name not in ["1","2","3","4","5","6","7","8","9"]:
-                roles.remove(role)
-                print(f"Removed role {role} from roles")
-        random.shuffle(roles)
-        print(f"Keeping roles :")
+    def get_game_roles(self,guild: discord.Guild):
+        roles = [role for role in guild.roles if role.name in ["1", "2", "3", "4", "5", "6", "7", "8", "9"]]
+    
+        print("Keeping roles:")
         for prnt_role in roles:
-            print(prnt_role.name,end=", ")
-        print("")
+            print(prnt_role.name, end=", ")
+        print("")  # Newline after the printed roles
+        
+        random.shuffle(roles)
         return roles
 
-    async def assign_roles(self, ctx: discord.ext.commands.Context):
-        print("Attributing roles")
+    async def assign_roles(self):
+        print("Attributing discord roles to user and channels")
         werewolf_channel = self.werewolf_channel
         specials_channel = self.specials_channel
 
-        roles = await self.get_game_roles()
+        roles = self.roles
+        print(roles)
 
         for index, player in enumerate(self.player_list):
             r = roles[index]
@@ -100,15 +100,15 @@ class Game:
                 else:
                     await player.discord.add_roles(r)
             except Exception as error:
-                print(f"Can't assign role {r} to {player} : {error}")
-                raise Exception
+                print(f"Can't assign role {r} to {player.discord.name} : {error}")
+                raise error
 
-    async def reset(self, ctx: discord.ext.commands.Context):
+    async def reset(self):
         print("Deleting roles on users")
         overwrite = discord.PermissionOverwrite()
         overwrite.view_channel = False
 
-        roles = await self.get_game_roles()
+        roles = self.roles
 
         for role in roles:
             await self.werewolf_channel.set_permissions(role, overwrite=overwrite)
