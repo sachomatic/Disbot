@@ -1,6 +1,5 @@
 import random
 import discord
-from tomllib import load
 
 import discord.ext
 import discord.ext.commands
@@ -33,7 +32,14 @@ class Game:
             if channel.name == "specials":
                 self.specials_channel = channel
 
-        assert all(type(channel) is discord.TextChannel for channel in (self.peasant_channel, self.werewolf_channel, self.specials_channel))
+        assert all(
+            type(channel) is discord.TextChannel
+            for channel in (
+                self.peasant_channel,
+                self.werewolf_channel,
+                self.specials_channel,
+            )
+        )
 
     def attribute_game_roles(self):
         print("Attributing games roles to player")
@@ -54,20 +60,18 @@ class Game:
         self.player_list[5].role = role_spe1
         self.player_list[6].role = role_spe2
 
-    def adv_create_role(self):
-        # Experimental
-        with open("werewolfes.toml") as file:
-            config = load(file)
-        raise NotImplementedError
+    def get_game_roles(self, guild: discord.Guild):
+        roles = [
+            role
+            for role in guild.roles
+            if role.name in ["1", "2", "3", "4", "5", "6", "7", "8", "9"]
+        ]
 
-    def get_game_roles(self,guild: discord.Guild):
-        roles = [role for role in guild.roles if role.name in ["1", "2", "3", "4", "5", "6", "7", "8", "9"]]
-    
         print("Keeping roles:")
         for prnt_role in roles:
             print(prnt_role.name, end=", ")
         print("")  # Newline after the printed roles
-        
+
         random.shuffle(roles)
         return roles
 
@@ -88,7 +92,13 @@ class Game:
                     overwrite.read_message_history = False
                     await werewolf_channel.set_permissions(r, overwrite=overwrite)
 
-                if player.role in ["president", "cupidon", "hunter", "witch", "stealer"]:
+                if player.role in [
+                    "president",
+                    "cupidon",
+                    "hunter",
+                    "witch",
+                    "stealer",
+                ]:
                     await player.discord.add_roles(r)
                     overwrite = discord.PermissionOverwrite()
                     overwrite.read_message_history = False
@@ -159,14 +169,16 @@ class Game:
 
                 if player.role == "werewolf":
                     await self.werewolf_channel.send(
-                        f"{player.discord.mention} Choose who to kill with !kill player_name")
+                        f"{player.discord.mention} Choose who to kill with !kill player_name"
+                    )
                     try:
                         await asyncio.wait_for(self.await_for_response(), 60)
                         response = None
                     except TimeoutError:
                         await self.werewolf_channel.send(
-                            f"{player.discord.mention} your vote is considred blank.")
-                        
+                            f"{player.discord.mention} your vote is considred blank."
+                        )
+
                 elif player.role == "cupidon" and self.round == 0:
                     await self.specials_channel.send(
                         f"{player.discord.mention} Choose the two lovers with !enamorate lover1 lover2"
@@ -175,81 +187,105 @@ class Game:
                         await asyncio.wait_for(self.await_for_response(), 60)
                         lover1_, lover2_ = response
                         try:
-                            lover1 = self.get_element_by_attribute(self.player_list, "name", lover1_)[0]
+                            lover1 = self.get_element_by_attribute(
+                                self.player_list, "name", lover1_
+                            )[0]
                             lover1.enamored = True
-                            lover2 = self.get_element_by_attribute(self.player_list, "name", lover2_)[0]
+                            lover2 = self.get_element_by_attribute(
+                                self.player_list, "name", lover2_
+                            )[0]
                             lover2.enamored = True
 
                             await lover1.discord.send(
-                                f"Congratulations, you are in love with {lover2.name}")
+                                f"Congratulations, you are in love with {lover2.name}"
+                            )
                             await lover2.discord.send(
                                 f"Congratulations, you are in love with {lover1.name}"
                             )
                         except Exception:
                             await self.peasant_channel.send(
-                                f"Cupidon was tired due to its nightshift, and made ghost fall in love : {lover1_} and {lover2_}")
+                                f"Cupidon was tired due to its nightshift, and made ghost fall in love : {lover1_} and {lover2_}"
+                            )
                         response = None
                     except TimeoutError:
                         await self.specials_channel.send(
-                            f"{player.discord.mention} Your absence of response has caused the love to disappear. Shame on you...")
+                            f"{player.discord.mention} Your absence of response has caused the love to disappear. Shame on you..."
+                        )
                 elif player.role == "stealer":
                     await self.specials_channel.send(
-                        f"{player.discord.mention} You must exchange your role with someone else with !steal player_name")
+                        f"{player.discord.mention} You must exchange your role with someone else with !steal player_name"
+                    )
                     try:
                         await asyncio.wait_for(self.await_for_response(), 60)
                         stealed = response
                         try:
                             print(stealed)
-                            stealed2 = self.get_element_by_attribute(self.player_list, "name", stealed)[0]
+                            stealed2 = self.get_element_by_attribute(
+                                self.player_list, "name", stealed
+                            )[0]
                         except Exception:
                             await self.specials_channel.send(
-                                "No one has this name. But I am nice, and I will exchange your role with a random person.")
+                                "No one has this name. But I am nice, and I will exchange your role with a random person."
+                            )
                             stealed2 = random.choice(self.player_list)
                         player.role = stealed2.role
                         stealed2.role = "stealer"
                         response = None
                     except TimeoutError:
                         await self.specials_channel.send(
-                            f"{player.discord.mention} Your chosen one has managed to get away.")
+                            f"{player.discord.mention} Your chosen one has managed to get away."
+                        )
                 player.state = True
         for dead in self.kill_dict:
             if self.kill_dict[dead] == "by the wolves.":
-                if self.get_element_by_attribute(self.player_list, "role", "witch") != []:
-                    witch = self.get_element_by_attribute(self.player_list, "role", "witch")[0]
+                if (
+                    self.get_element_by_attribute(self.player_list, "role", "witch")
+                    != []
+                ):
+                    witch = self.get_element_by_attribute(
+                        self.player_list, "role", "witch"
+                    )[0]
                     witch.state = 0
-                    witch = self.get_element_by_attribute(self.player_list, "role", "witch")[0]
+                    witch = self.get_element_by_attribute(
+                        self.player_list, "role", "witch"
+                    )[0]
                     await self.specials_channel.send(
-                        f"{witch.discord.mention} {dead.name} has been killed by the wolves. You have two choice: save the killed player with !save player_name or kill a person with !poison player_name, or you can do nothing.")
+                        f"{witch.discord.mention} {dead.name} has been killed by the wolves. You have two choice: save the killed player with !save player_name or kill a person with !poison player_name, or you can do nothing."
+                    )
                     try:
                         await asyncio.wait_for(self.await_for_response(), 60)
                         choice, target = response
                         if choice == "save":
                             del self.kill_dict[dead]
                         else:
-                            #un IF SUR 5 LIGNES POUR UNE CONDITION?!
-                            if self.get_element_by_attribute(self.player_list, "name", target)!= []:
+                            # un IF SUR 5 LIGNES POUR UNE CONDITION?!
+                            if (
+                                self.get_element_by_attribute(
+                                    self.player_list, "name", target
+                                )
+                                != []
+                            ):
                                 self.eliminate(target, "by the witch.")
                     except TimeoutError:
                         await self.specials_channel.send(
-                            f"{player.discord.mention} You were too tired and did nothing.")
+                            f"{player.discord.mention} You were too tired and did nothing."
+                        )
         rep = self.end_vote()
         if rep is False:
             await ctx.send(
-                f"The Werewolves were definitely drunk, and tried to vote for a ghost : {rep}")
+                f"The Werewolves were definitely drunk, and tried to vote for a ghost : {rep}"
+            )
         elif rep == None:
             await ctx.send(
-                f"The Werewolves didn't vote for anyone, so I guesse you're safe now..")
+                f"It seems that there is no one in this game...")
         else:
             for killed in self.kill_dict.keys():
-                await ctx.send(
-                    f"{killed} was eliminated{self.kill_dict[killed]}")
-        await ctx.send(
-            "It's the end of the night.")
+                await ctx.send(f"{killed} was eliminated{self.kill_dict[killed]}")
+        await ctx.send("It's the end of the night.")
         self.round += 1
 
         werewolves = self.get_element_by_attribute(self.player_list, "role", "werewolf")
         other = self.get_element_by_attribute(self.player_list, "role", "werewolf", None, True)
-        print(werewolves,other)
 
         werewolves_count = len()
         other_count = 0
@@ -261,13 +297,15 @@ class Game:
                 other_count += 1
         if werewolves_count == 0:
             await self.peasant_channel.send(
-                "@everyone The game is finished, and the peasants winned :")
+                "@everyone The game is finished, and the peasants winned :"
+            )
             for o in other:
                 await self.peasant_channel.send(o.name)
             return False
         elif werewolves_count >= other_count:
             await self.peasant_channel.send(
-                "@everyone The game is finished, and the werewolves winned :")
+                "@everyone The game is finished, and the werewolves winned :"
+            )
             for w in werewolves:
                 await self.peasant_channel.send(w.name)
             return False
@@ -277,14 +315,16 @@ class Game:
         import asyncio
 
         await self.peasant_channel.send(
-            "The village is now awake. You can now proceed to the vote.")
-        
+            "The village is now awake. You can now proceed to the vote."
+        )
+
         president = self.get_element_by_attribute(self.player_list, "role", "president")
         if president != []:
             president = president[0].name
             await self.peasant_channel.send(
-                f"You have 1 minute to vote with the command !vote player_name. The president's vote counts for 2, wich is {president}")
-            
+                f"You have 1 minute to vote with the command !vote player_name. The president's vote counts for 2, wich is {president}"
+            )
+
         else:
             await self.peasant_channel.send(
                 "You have 1 minute to vote with the command !vote player_name."
@@ -303,7 +343,9 @@ class Game:
         for player in self.player_list:
             if player.name == voted and player.state is True:
                 if player.enamored is True:
-                    for player in self.get_element_by_attribute(self.player_list, "enamored", True):
+                    for player in self.get_element_by_attribute(
+                        self.player_list, "enamored", True
+                    ):
                         player.kill()
                         self.kill_dict[player.name] = "because he was in mad love."
 
@@ -318,7 +360,7 @@ class Game:
                     player.kill()
                     self.kill_dict[player.name] = "by the wolves."
                 return voted
-            
+
         return False
 
     def end_vote(self, reason=None):
@@ -328,7 +370,9 @@ class Game:
         for player in self.vote_list:
             try:
                 votes[player] += 1
-            except KeyError: #Si le joueur n'a pas encore reçu de vote, alors son 'compte' est crée
+            except (
+                KeyError
+            ):  # Si le joueur n'a pas encore reçu de vote, alors son 'compte' est crée
                 votes[player] = 1
         max_value = max(dict.items())
         for player in self.vote_list:
@@ -338,7 +382,8 @@ class Game:
         return self.eliminate(player, reason)
 
     def get_element_by_attribute(
-        self, list, attribute, match, output_attr=None, inversed=False):
+        self, list, attribute, match, output_attr=None, inversed=False
+    ):
         output = []
         if inversed is False:
             for element in list:
@@ -368,6 +413,7 @@ class Player:
 
     async def kill(self, specials_channel: discord.TextChannel):
         import asyncio
+
         assert type(specials_channel) is discord.TextChannel
         if self.state is not False:
             self.state = False
