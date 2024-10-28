@@ -276,8 +276,7 @@ class Game:
                 f"The Werewolves were definitely drunk, and tried to vote for a ghost : {rep}"
             )
         elif rep == None:
-            await ctx.send(
-                f"It seems that there is no one in this game...")
+            await ctx.send(f"It seems that there is no one in this game...")
         else:
             for killed in self.kill_dict.keys():
                 await ctx.send(f"{killed} was eliminated{self.kill_dict[killed]}")
@@ -285,7 +284,9 @@ class Game:
         self.round += 1
 
         werewolves = self.get_element_by_attribute(self.player_list, "role", "werewolf")
-        other = self.get_element_by_attribute(self.player_list, "role", "werewolf", None, True)
+        other = self.get_element_by_attribute(
+            self.player_list, "role", "werewolf", None, True
+        )
 
         werewolves_count = len()
         other_count = 0
