@@ -8,7 +8,7 @@ import asyncio
 import discord
 from discord.ext import commands
 from dotenv import load_dotenv
-from Werewolf_game import Game, Player
+from werewolf_game import Game, Player
 
 """
 Ceci est une tentative du jeu du loup garou sur un bot discord.

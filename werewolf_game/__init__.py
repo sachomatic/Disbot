@@ -1,23 +1,37 @@
+from pickle import Unpickler
 import random
+from tomllib import load
+from typing import AnyStr, NotRequired, TypedDict
 import discord
 
-import discord.ext
 import discord.ext.commands
 
+from disabler import disable
+
+class _CRS(TypedDict):
+    teams: list[int | str]
+    sname: str
+    pname: NotRequired[str]
+
+class ConfigStructure(TypedDict):
+    min: int
+    turns: int
+    night: dict[str, dict[str, int]]
+    roles: dict[str, _CRS]
 
 class Game:
     # liste des joueurs, des rôles, des votes, et des morts
-    def __init__(self, player_list: list["Player"], server: discord.Guild):
+    def __init__(
+        self,
+        player_list: list["Player"],
+        server: discord.Guild,
+        config_path: AnyStr = "werewolf.toml",
+        *actions_path: AnyStr
+    ) -> None:
         # liste des joueurs, des rôles,des votes, et des morts
-        self.player_list = player_list
-        self.spe_roles = ["president", "cupidon", "hunter", "witch", "stealer"]
+        self.player_list: list[Player] = player_list
         self.vote_list = []
         self.killed_list = {}
-
-        self.roles = self.get_game_roles(server)
-
-        # nombre de tours
-        self.round = 0
 
         # serveur
         self.server = server
@@ -25,22 +39,34 @@ class Game:
         self.night_day = None
 
         for channel in self.channels:
-            if channel.name == "village":
-                self.peasant_channel = channel
-            if channel.name == "werewolf":
-                self.werewolf_channel = channel
-            if channel.name == "specials":
-                self.specials_channel = channel
+            match channel.name:
+                case "village":
+                    self.village_channel = channel
+                case "werewolfes":
+                    self.werewolf_channel = channel
+                case "specials":
+                    self.specials_channel = channel
 
-        assert all(
-            type(channel) is discord.TextChannel
-            for channel in (
-                self.peasant_channel,
-                self.werewolf_channel,
-                self.specials_channel,
-            )
-        )
+        assert type(self.village_channel) is discord.TextChannel
+        assert type(self.werewolf_channel) is discord.TextChannel
+        assert type(self.specials_channel) is discord.TextChannel
 
+        with open(config_path, "rb", encoding="UTF-8") as file:
+            config = load(file)
+            self.config = config
+            try:
+                pass
+            except IndexError | ValueError:
+                raise RuntimeError("Config file is not correctly structured")
+            assert type(config) is ConfigStructure
+        
+        for path in actions_path:
+            Unpickler()
+
+    def attribute_roles(self):
+        roles: ConfigStructure = self.config["list"]["roles"]
+
+    @disable
     def attribute_game_roles(self):
         print("Attributing games roles to player")
         self.game_roles = {}
@@ -64,6 +90,7 @@ class Game:
             self.player_list[5].role = role_spe1
             self.player_list[6].role = role_spe2
 
+    @disable
     def get_game_roles(self, guild: discord.Guild):
         roles = [
             role
@@ -79,6 +106,7 @@ class Game:
         random.shuffle(roles)
         return roles
 
+    @disable
     async def assign_roles(self):
         print("Attributing discord roles to user and channels")
         werewolf_channel = self.werewolf_channel
@@ -113,6 +141,7 @@ class Game:
                 print(f"Can't assign role {r} to {player.discord.name} : {error}")
                 raise error
 
+    @disable
     async def reset(self):
         print("Deleting roles on users")
         overwrite = discord.PermissionOverwrite()
@@ -207,7 +236,7 @@ class Game:
                                 f"Congratulations, you are in love with {lover1.name}"
                             )
                         except Exception:
-                            await self.peasant_channel.send(
+                            await self.village_channel.send(
                                 f"Cupidon was tired due to its nightshift, and made ghost fall in love : {lover1_} and {lover2_}"
                             )
                         response = None
@@ -301,45 +330,45 @@ class Game:
             if o.state is True:
                 other_count += 1
         if werewolves_count == 0:
-            await self.peasant_channel.send(
+            await self.village_channel.send(
                 "@everyone The game is finished, and the peasants winned :"
             )
             for o in other:
-                await self.peasant_channel.send(o.name)
+                await self.village_channel.send(o.name)
             return False
         elif werewolves_count >= other_count:
-            await self.peasant_channel.send(
+            await self.village_channel.send(
                 "@everyone The game is finished, and the werewolves winned :"
             )
             for w in werewolves:
-                await self.peasant_channel.send(w.name)
+                await self.village_channel.send(w.name)
             return False
         return True
 
     async def day(self, ctx: discord.ext.commands.Context):
         import asyncio
 
-        await self.peasant_channel.send(
+        await self.village_channel.send(
             "The village is now awake. You can now proceed to the vote."
         )
 
         president = self.get_element_by_attribute(self.player_list, "role", "president")
         if president[0]:
             president = president[0].name
-            await self.peasant_channel.send(
+            await self.village_channel.send(
                 f"You have 1 minute to vote with the command !vote player_name. The president's vote counts for 2, wich is {president}"
             )
 
         else:
-            await self.peasant_channel.send(
+            await self.village_channel.send(
                 "You have 1 minute to vote with the command !vote player_name."
             )
 
         asyncio.sleep(60)
-        self.peasant_channel.send("The vote is now finished.")
+        self.village_channel.send("The vote is now finished.")
         self.end_vote(reason="by the community.")
         for dead in self.kill_dict.keys():
-            await self.peasant_channel.send(f"{dead} was killed {self.kill_dict[dead]}")
+            await self.village_channel.send(f"{dead} was killed {self.kill_dict[dead]}")
 
     def vote(self, vote):
         self.vote_list.append(vote)

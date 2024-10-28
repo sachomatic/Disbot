@@ -1,0 +1,26 @@
+turns = 5
+min = 8
+
+[list]
+night = ["werewolfes", "whitch"]
+
+[night]
+werewolfes.kill = 0
+voyante.discover = 0
+whitches.kill = 1
+whitches.revive = 1
+cupidons.love = 1
+
+[roles]
+werewolfes = { teams = [1, "werewolfes"], sname = "werewolf", pname = "werewolfes" }
+voyantes = { teams = [0, "voyantes"], sname = "voyante" }
+whitches = { teams = [0, "whitches"], sname = "whitch" }
+cupidons = { teams = [0, "cupidons"], sname = "cupidon" }
+peasants = { teams = [0], sname = "peasant", pname = "peasants" }
+
+[selection]
+8.cupidons = 1
+8.werewolfes = 2
+8.voyantes = 1
+8.hunters = 1
+12.werewolfes = 3
