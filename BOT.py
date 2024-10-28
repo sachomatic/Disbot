@@ -82,8 +82,7 @@ async def create_game(ctx: commands.Context, *args, **kwargs):
     global game_start
     global player_lst
     await ctx.send(
-        "@everyone Starting game in 1 minute. Use !start to start now and !join to join the game! There must be at least 4 players to start the game and maximum 10 players"
-    )
+        "@everyone Starting game in 1 minute. Use !start to start now and !join to join the game! There must be at least 4 players to start the game and maximum 10 players")
     game_start = False
     player_lst = []
     # On attends une minute pour que les jouers rejoignent, puis on lance la partie
@@ -104,6 +103,9 @@ async def start_game(ctx: commands.Context, *args, **kwargs):
     if player_lst == []:
         await ctx.send("No one has joined, game is canceled.")
         return
+    elif len(player_lst) < 3:
+        await ctx.send("Not enough player joined, game is canceled.")
+        return
     if "game" in globals():
         await ctx.send("Game was already started.")
         return
@@ -114,19 +116,19 @@ async def start_game(ctx: commands.Context, *args, **kwargs):
         await ctx.send("Starting game with:", delete_after=5)
         for pl in game.player_list:
             await ctx.send(f"-{pl.name}", delete_after=5)
+        await ctx.send("Preparing game...")
+        try:
+            # Les rôles de la partie précédente, si ils existent, sont retirés
+            await game.reset()
+        except Exception:
+            logging.exception("")
+            await ctx.send(
+                "Error : roles couldn't be resetted, game will continue but might crash")
         # Création des rôles (1-9) pour l'anonimat des rôles
         game.attribute_game_roles()
         for player in player_lst:
             await player.discord.send(f"You are a {player.role}")
         await ctx.send("Please wait while the roles are resetting.")
-        try:
-            # Les rôles de la partie précédente, si ils existent, sont retirés
-            await game()
-        except Exception:
-            logging.exception("")
-            await ctx.send(
-                "Error : roles couldn't be resetted, game will continue but might crash"
-            )
         await ctx.send("Let's go!")
         # attribution des rôles
         await game.assign_roles()
@@ -181,16 +183,12 @@ async def kill(ctx: commands.Context, *args, **kwargs):
         await ctx.send("Game is not created")
         return
     # obtention des noms des loup garou
-    name_list = game.get_element_by_attribute(
-        game.player_list, "role", "werewolf", "name"
-    )
+    player_list = game.get_element_by_attribute(game.player_list, "role", "werewolf")
     try:
         # obtention du joueur qui a lancé la commande et vérification qu'il est loup garou
-        player = game.get_element_by_attribute(
-            name_list, "name", ctx.author.display_name
-        )[0]
+        player_name = game.get_element_by_attribute(player_list, "name", ctx.author.display_name)
         # On vérifie que le joueur n'est pas mort
-        if player.state == 0:
+        if player_list[0].state == True and player_name[0] == ctx.author:
             try:
                 # obtention du jouer pour lequel le loup garou a voté
                 name = args[0]
@@ -202,9 +200,10 @@ async def kill(ctx: commands.Context, *args, **kwargs):
             game.vote(name)
             await game.transfer_response(name)
         else:
-            await ctx.send("You are dead.")
-    except Exception:
-        await ctx.send("You are not a werewolf.")
+            await ctx.send("You are dead or are not a werewolf")
+            print(player_list[0].state,player_list[0].role)
+    except Exception as error:
+        logging.exception("")
 
 
 @bot.command(name="enamorate")
@@ -412,6 +411,9 @@ async def dm_me(ctx: commands.Context, *args, **kwargs):
 @bot.command(name="join")
 async def join_list(ctx: commands.Context, *args, **kwargs):
     global player_lst
+    if len(player_lst) >= 10:
+        await ctx.send("Sorry, the game is full, so you can't join.")
+        return
     if "game" in globals():
         await ctx.send("Sorry, the game is already started")
         return
@@ -422,12 +424,17 @@ async def join_list(ctx: commands.Context, *args, **kwargs):
 @bot.command(name="fill")
 async def fill_game(ctx: commands.Context, *args, **kwargs):
     global player_lst
+    if "game" in globals():
+        await ctx.send("Sorry, the game is already started")
+        return
+    await ctx.send("This function is meant for testing only...")
     try:
         fill_number = int(args[0])
     except Exception:
         fill_number = 7
+    await ctx.send(f"Joining {fill_number} times")
     for i in range(fill_number):
-        await join_list(ctx)
+        player_lst.append(Player(ctx.author.display_name, ctx.author))
 
 
 @bot.command(name="see_commands")

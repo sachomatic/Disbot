@@ -8,7 +8,7 @@ import discord.ext.commands
 
 class Game:
     # liste des joueurs, des rôles, des votes, et des morts
-    def __init__(self, player_list: list["Player"], server: discord.Guild):
+    def __init__(self, player_list: list['Player'], server: discord.Guild):
         # liste des joueurs, des rôles,des votes, et des morts
         self.player_list = player_list
         self.spe_roles = ["president", "cupidon", "hunter", "witch", "stealer"]
@@ -37,26 +37,22 @@ class Game:
 
     def attribute_game_roles(self):
         print("Attributing games roles to player")
-        self.game_roles = {}
-        if len(self.player_list) == 7:
-            for role in self.spe_roles:
-                self.game_roles[role] = None
 
-            random.shuffle(self.player_list)
-            role_spe1 = None
-            role_spe2 = None
+        random.shuffle(self.player_list)
+        role_spe1 = None
+        role_spe2 = None
 
-            while role_spe1 == role_spe2:
-                role_spe1 = random.choice(self.spe_roles)
-                role_spe2 = random.choice(self.spe_roles)
+        while role_spe1 == role_spe2:
+            role_spe1 = random.choice(self.spe_roles)
+            role_spe2 = random.choice(self.spe_roles)
 
-            self.player_list[0].role = "werewolf"
-            self.player_list[1].role = "werewolf"
-            self.player_list[2].role = "peasant"
-            self.player_list[3].role = "peasant"
-            self.player_list[4].role = "peasant"
-            self.player_list[5].role = role_spe1
-            self.player_list[6].role = role_spe2
+        self.player_list[0].role = "werewolf"
+        self.player_list[1].role = "werewolf"
+        self.player_list[2].role = "peasant"
+        self.player_list[3].role = "peasant"
+        self.player_list[4].role = "peasant"
+        self.player_list[5].role = role_spe1
+        self.player_list[6].role = role_spe2
 
     def adv_create_role(self):
         # Experimental
@@ -242,7 +238,7 @@ class Game:
                 f"The Werewolves were definitely drunk, and tried to vote for a ghost : {rep}")
         elif rep == None:
             await ctx.send(
-                f"It seems that there is no one in this game...")
+                f"The Werewolves didn't vote for anyone, so I guesse you're safe now..")
         else:
             for killed in self.kill_dict.keys():
                 await ctx.send(
@@ -253,8 +249,9 @@ class Game:
 
         werewolves = self.get_element_by_attribute(self.player_list, "role", "werewolf")
         other = self.get_element_by_attribute(self.player_list, "role", "werewolf", None, True)
+        print(werewolves,other)
 
-        werewolves_count = 0
+        werewolves_count = len()
         other_count = 0
         for w in werewolves:
             if w.state is True:
@@ -283,7 +280,7 @@ class Game:
             "The village is now awake. You can now proceed to the vote.")
         
         president = self.get_element_by_attribute(self.player_list, "role", "president")
-        if president[0]:
+        if president != []:
             president = president[0].name
             await self.peasant_channel.send(
                 f"You have 1 minute to vote with the command !vote player_name. The president's vote counts for 2, wich is {president}")
