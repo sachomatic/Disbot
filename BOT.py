@@ -111,13 +111,14 @@ async def start_game(ctx: commands.Context, *args, **kwargs):
         await ctx.send("Game was already started.")
         return
     try:
+        start_time = time.time()
         game_start = True
         # Game() est la classe qui gère la partie en cours
         game = Game(player_lst, ctx.guild)
         await ctx.send("Starting game with:", delete_after=5)
         for pl in game.player_list:
             await ctx.send(f"-{pl.name}", delete_after=5)
-        await ctx.send("Preparing game...")
+        await ctx.send("Preparing game... Please wait while the roles are resetting.")
         try:
             # Les rôles de la partie précédente, si ils existent, sont retirés
             await game.reset()
@@ -129,7 +130,11 @@ async def start_game(ctx: commands.Context, *args, **kwargs):
         game.attribute_game_roles()
         for player in player_lst:
             await player.discord.send(f"You are a {player.role}")
-        await ctx.send("Please wait while the roles are resetting.")
+        end_time = time.time()
+        final_time = end_time - start_time
+        minutes = final_time // 60
+        seconds = round(final_time % 60 * 60,0)
+        await ctx.send(f"Took {minutes}:{seconds} to prepare game.")
         await ctx.send("Let's go!")
         # attribution des rôles
         await game.assign_roles()
@@ -381,16 +386,7 @@ async def setup(ctx: commands.Context):
             ver = True
     if ver is False:
         await ctx.guild.create_text_channel("village")
-    for role in temp.spe_roles:
-        temp_ver = False
-        for channel in ctx.guild.channels:
-            if str(channel) == role:
-                temp_ver = True
-        if temp_ver is False:
-            await ctx.send(f"Creating {role}")
-            await ctx.guild.create_text_channel(role)
-        else:
-            await ctx.send(f"{role} is already created.")
+    await ctx.guild.create_text_channel("specials")
     # for i in range(1, 10):
     #     await create_role(ctx, i)
     await ctx.send("done")
@@ -428,7 +424,7 @@ async def fill_game(ctx: commands.Context, *args, **kwargs):
     if "game" in globals():
         await ctx.send("Sorry, the game is already started")
         return
-    await ctx.send("This function is meant for testing only...")
+    await ctx.send("This function is meant for testing only")
     try:
         fill_number = int(args[0])
     except Exception:

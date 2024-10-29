@@ -176,7 +176,7 @@ class Game:
                         response = None
                     except TimeoutError:
                         await self.werewolf_channel.send(
-                            f"{player.discord.mention} your vote is considred blank."
+                            f"{player.discord.mention} your vote is considered blank."
                         )
 
                 elif player.role == "cupidon" and self.round == 0:
@@ -276,7 +276,7 @@ class Game:
                 f"The Werewolves were definitely drunk, and tried to vote for a ghost : {rep}"
             )
         elif rep == None:
-            await ctx.send(f"It seems that there is no one in this game...")
+            await ctx.send(f"The werewolves couldn't come to an agreement, so I guess you're safe for now..")
         else:
             for killed in self.kill_dict.keys():
                 await ctx.send(f"{killed} was eliminated{self.kill_dict[killed]}")
@@ -288,7 +288,7 @@ class Game:
             self.player_list, "role", "werewolf", None, True
         )
 
-        werewolves_count = len()
+        werewolves_count = len(werewolves)
         other_count = 0
         for w in werewolves:
             if w.state is True:
@@ -332,7 +332,7 @@ class Game:
             )
 
         asyncio.sleep(60)
-        self.peasant_channel.send("The vote is now finished.")
+        await self.peasant_channel.send("The vote is now finished.")
         self.end_vote(reason="by the community.")
         for dead in self.kill_dict.keys():
             await self.peasant_channel.send(f"{dead} was killed {self.kill_dict[dead]}")
