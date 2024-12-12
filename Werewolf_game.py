@@ -24,6 +24,8 @@ class Game:
         self.channels = server.channels
         self.night_day = None
 
+        self.thread = None
+
         for channel in self.channels:
             if channel.name == "village":
                 self.peasant_channel = channel
@@ -144,22 +146,38 @@ class Game:
                 pass
 
     async def start(self, ctx: discord.ext.commands.Context):
-        while True:
-            self.kill_dict = {}
-            self.night_day = "night"
-            if await self.night(ctx) is False:
-                break
+        import asyncio
 
-            self.kill_dict = {}
-            self.night_day = "day"
-            if await self.day(ctx) is False:
-                break
+        self.thread = asyncio.create_task(self.game(ctx))
+        self.thread.cancel()
+
+    def terminate_game(self):
+        thread  = self.thread
+        
+        
+    async def game(self, ctx: discord.ext.commands.Context):
+        import asyncio
+        try:
+            while True:
+                self.kill_dict = {}
+                self.night_day = "night"
+                if await self.night(ctx) is False:
+                    break
+
+                self.kill_dict = {}
+                self.night_day = "day"
+                if await self.day(ctx) is False:
+                    break
+        except asyncio.CancelledError:
+            print("Stopped game...")
 
     async def night(self, ctx: discord.ext.commands.Context):
         import time
         import asyncio
 
         global response
+
+        await self.peasant_channel.send("------------------------------------")
 
         await ctx.send("The village is now asleep.")
         time.sleep(2)
@@ -315,6 +333,8 @@ class Game:
     async def day(self, ctx: discord.ext.commands.Context):
         import asyncio
 
+        await self.peasant_channel.send("------------------------------------")
+
         await self.peasant_channel.send(
             "The village is now awake. You can now proceed to the vote."
         )
@@ -331,7 +351,7 @@ class Game:
                 "You have 1 minute to vote with the command !vote player_name."
             )
 
-        asyncio.sleep(60)
+        await asyncio.sleep(60)
         await self.peasant_channel.send("The vote is now finished.")
         self.end_vote(reason="by the community.")
         for dead in self.kill_dict.keys():

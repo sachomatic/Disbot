@@ -97,6 +97,7 @@ async def create_game(ctx: commands.Context, *args, **kwargs):
 
 @bot.command(name="start")
 async def start_game(ctx: commands.Context, *args, **kwargs):
+    import math
     assert ctx.guild is not None
     # Lancer la partie, peut être appelé avant la fin du timer
     global game_start
@@ -104,6 +105,7 @@ async def start_game(ctx: commands.Context, *args, **kwargs):
     global game
     if player_lst == []:
         await ctx.send("No one has joined, game is canceled.")
+        cancel_game()
         return
     elif len(player_lst) < 3:
         await ctx.send("Not enough player joined, game is canceled.")
@@ -131,13 +133,12 @@ async def start_game(ctx: commands.Context, *args, **kwargs):
         # Création des rôles (1-9) pour l'anonimat des rôles
         game.attribute_game_roles()
         for player in player_lst:
-            await player.discord.send(f"You are a {player.role}")
+            await player.discord.send(f"Hello {player.discord.global_name}You are a {player.role}")
         end_time = time.time()
         final_time = end_time - start_time
         minutes = final_time // 60
-        seconds = round(final_time % 60 * 60,0)
-        await ctx.send(f"Took {minutes}:{seconds} to prepare game.")
-        await ctx.send("Let's go!")
+        seconds = round(final_time % 60)
+        await ctx.send(f"Took {int(minutes)}:{math.floor(seconds)} to prepare game.",delete_after=10)
         # attribution des rôles
         await game.assign_roles()
         await game.start(ctx)
@@ -198,7 +199,7 @@ async def kill(ctx: commands.Context, *args, **kwargs):
             player_list, "name", ctx.author.display_name
         )
         # On vérifie que le joueur n'est pas mort
-        if player_list[0].state is True and player_name[0] == ctx.author:
+        if player_list[0].state == True and player_name[0] == ctx.author:
             try:
                 # obtention du jouer pour lequel le loup garou a voté
                 name = args[0]
@@ -398,10 +399,19 @@ async def setup(ctx: commands.Context):
 
 
 @bot.command(name="cancel")
-async def stop_game(ctx: commands.Context):
+async def cancel_game(ctx: commands.Context):
     global game_start
     game_start = False
     await ctx.send("Game stopped")
+
+@bot.command("stop")
+async def stop_game(ctx:commands.Context):
+    global game
+    if game != None:
+        game.terminate_game()
+        await ctx.send("Game terminated")
+    else:
+        await ctx.send("Game isn't launched")
 
 
 @bot.command("hello")
