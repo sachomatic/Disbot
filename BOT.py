@@ -137,9 +137,8 @@ async def start_game(ctx: commands.Context, *args, **kwargs):
 
         end_time = time.time()
         final_time = end_time - start_time
-        minutes = final_time // 60
         seconds = round(final_time % 60)
-        await ctx.send(f"Took {int(minutes)}:{math.floor(seconds)} to prepare game.",delete_after=10)
+        await ctx.send(f"Took {math.floor(seconds)}s to prepare game.",delete_after=10)
 
         await game.game(ctx)
 
@@ -155,7 +154,7 @@ async def start_game(ctx: commands.Context, *args, **kwargs):
         logging.exception("")
         await ctx.send(
             "An error occured, causing the game to crash. Please restart it.")
-        stop_game()
+        await stop_game(ctx)
     finally:
         game = None
         game_start = False
@@ -193,14 +192,14 @@ async def kill(ctx: commands.Context, *args, **kwargs):
         await ctx.send("Game is not created")
         return
     # obtention des noms des loup garou
-    player_list = game.get_element_by_attribute(game.player_list, "role", "werewolf")
+    werewolves_list = game.get_element_by_attribute(game.player_list, "role", "werewolf")
     try:
         # obtention du joueur qui a lancé la commande et vérification qu'il est loup garou
-        player_name = game.get_element_by_attribute(
-            player_list, "name", ctx.author.display_name
+        match = game.get_element_by_attribute(
+            werewolves_list, "name", ctx.author.display_name
         )
         # On vérifie que le joueur n'est pas mort
-        if player_list[0].state == True and player_name[0] == ctx.author:
+        if match[0].state == "pause" and match != []:
             try:
                 # obtention du jouer pour lequel le loup garou a voté
                 name = args[0]
@@ -213,7 +212,7 @@ async def kill(ctx: commands.Context, *args, **kwargs):
             await game.transfer_response(name)
         else:
             await ctx.send("You are dead or are not a werewolf")
-            print(player_list[0].state, player_list[0].role)
+            print(match[0].state, match[0].role,match)
     except Exception:
         logging.exception("")
 
@@ -226,11 +225,9 @@ async def enamorate(ctx: commands.Context, *args, **kwargs):
         await ctx.send("Game is not created")
         return
     # Obtention du joueur
-    player = game.get_element_by_attribute(game.player_list, "role", "cupidon", "name")[
-        0
-    ]
+    player = game.get_element_by_attribute(game.player_list, "role", "cupidon", output_attr="name")[0]
     # Vérification que le joueur est bien cupidon et n'est pas mort
-    if ctx.author.display_name == player.name and player.state == 0:
+    if ctx.author.display_name == player[0] and player[0].state == "pause":
         try:
             # obtention des deux amoureux
             lover1 = args[0]
@@ -256,11 +253,9 @@ async def steal(ctx: commands.Context, *args, **kwargs):
     if not game_start:
         await ctx.send("Game is not created")
         return
-    player = game.get_element_by_attribute(game.player_list, "role", "stealer", "name")[
-        0
-    ]
+    player = game.get_element_by_attribute(game.player_list, "role", "stealer", "name")[0]
     # on vérifie que le joueur est vivant et qu'il est voleur
-    if ctx.author.display_name == player and player.state == 0:
+    if ctx.author.display_name == player[0] and player.state == "pause":
         try:
             stealed = args[0]
             # on vérifie que le jouer ne se vole pas lui même
@@ -287,7 +282,7 @@ async def hunt(ctx: commands.Context, *args, **kwargs):
         return
     player = game.get_element_by_attribute(game.player_list, "role", "hunt")[0]
     # on vérifie que le jouer est vivant et qu'il est chasseur
-    if ctx.author.display_name == player.name and player.state == 0:
+    if ctx.author.display_name == player[0].name and player.state == "pause":
         try:
             hunted = args[0]
             # on vérifie que le joueur ne se tue pas lui même
@@ -314,7 +309,7 @@ async def save(ctx: commands.Context, *args, **kwargs):
         return
     player = game.get_element_by_attribute(game.player_list, "role", "witch")[0]
     # on vérifie que le jouer est une sorcière
-    if ctx.author.display_name == player.name and player.state == 0:
+    if ctx.author.display_name == player[0].name and player.state == "pause":
         # on transfère les données
         await game.transfer_response(["save", None])
     else:
@@ -329,7 +324,7 @@ async def poison(ctx: commands.Context, *args, **kwargs):
         return
     player = game.get_element_by_attribute(game.player_list, "role", "witch", "name")[0]
     # on vérifie que le jouer est une sorcière
-    if ctx.author.display_name == player and player.state == 0:
+    if ctx.author.display_name == player[0].name and player.state == "pause":
         try:
             target = args[0]
             # on vérifie que le joueur ne se tue pas lui même
@@ -354,11 +349,9 @@ async def vote(ctx: commands.Context, *args, **kwargss):
     if not game_start:
         await ctx.send("Game is not created")
         return
-    user = game.get_element_by_attribute(
-        game.player_list, "name", ctx.author.display_name
-    )
+    user = game.get_element_by_attribute(game.player_list, "name", ctx.author.display_name)
     # On vérifie que le joueur est vivant et que c'est le jour
-    if user.state is True:
+    if user.state == "alive":
         if game.night_day == "day":
             try:
                 voted = args[0]

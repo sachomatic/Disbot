@@ -100,10 +100,10 @@ class Game:
         import asyncio
 
         self.thread = asyncio.create_task(self.game(ctx))
-        self.thread.cancel()
+        await self.thread
 
     def terminate_game(self):
-        thread  = self.thread
+        thread  = self.thread.cancel()
         
         
     async def game(self, ctx: discord.ext.commands.Context):
@@ -133,8 +133,8 @@ class Game:
         await ctx.send("The village is now asleep.")
         time.sleep(2)
         for player in self.player_list:
-            if player.state is True:
-                player.state = 0
+            if player.state == "alive":
+                player.state = "pause"
 
                 if player.role == "werewolf":
                     await self.werewolf_channel.send(
@@ -204,7 +204,7 @@ class Game:
                         await self.specials_channel.send(
                             f"{player.discord.mention} Your chosen one has managed to get away."
                         )
-                player.state = True
+                player.state = "alive"
         for dead in self.kill_dict:
             if self.kill_dict[dead] == "by the wolves.":
                 if (
@@ -214,7 +214,7 @@ class Game:
                     witch = self.get_element_by_attribute(
                         self.player_list, "role", "witch"
                     )[0]
-                    witch.state = 0
+                    witch.state = "pause"
                     witch = self.get_element_by_attribute(
                         self.player_list, "role", "witch"
                     )[0]
@@ -234,12 +234,12 @@ class Game:
                                 )
                                 != []
                             ):
-                                self.eliminate(target, "by the witch.")
+                                await self.eliminate(target, "by the witch.")
                     except TimeoutError:
                         await self.specials_channel.send(
                             f"{player.discord.mention} You were too tired and did nothing."
                         )
-        rep = self.end_vote()
+        rep = await self.end_vote()
         if rep is False:
             await ctx.send(
                 f"The Werewolves were definitely drunk, and tried to vote for a ghost : {rep}"
@@ -260,10 +260,10 @@ class Game:
         werewolves_count = len(werewolves)
         other_count = 0
         for w in werewolves:
-            if w.state is True:
+            if w.state == "alive":
                 werewolves_count += 1
         for o in other:
-            if o.state is True:
+            if o.state == "alive":
                 other_count += 1
         if werewolves_count == 0:
             await self.peasant_channel.send(
@@ -304,54 +304,50 @@ class Game:
 
         await asyncio.sleep(60)
         await self.peasant_channel.send("The vote is now finished.")
-        self.end_vote(reason="by the community.")
+        await self.end_vote(reason="by the community.")
         for dead in self.kill_dict.keys():
             await self.peasant_channel.send(f"{dead} was killed {self.kill_dict[dead]}")
 
     def vote(self, vote):
         self.vote_list.append(vote)
 
-    def eliminate(self, voted, reason=None):
+    async def eliminate(self, voted, reason=None):
         for player in self.player_list:
-            if player.name == voted and player.state is True:
+            if player.name == voted and player.state == "alive":
                 if player.enamored is True:
-                    for player in self.get_element_by_attribute(
-                        self.player_list, "enamored", True
-                    ):
-                        player.kill()
+                    for player in self.get_element_by_attribute(self.player_list, "enamored", True):
+                        await player.kill()
                         self.kill_dict[player.name] = "because he was in mad love."
 
                 elif player.role == "hunter":
-                    self.eliminate(player.kill(self.specials_channel), "by revenge.")
+                    await self.eliminate(await player.kill(self.specials_channel), "by revenge.")
 
                 elif reason:
-                    player.kill()
+                    await player.kill()
                     self.kill_dict[player.name] = reason
 
                 else:
-                    player.kill()
+                    await player.kill()
                     self.kill_dict[player.name] = "by the wolves."
                 return voted
 
         return False
 
-    def end_vote(self, reason=None):
+    async def end_vote(self, reason=None):
         votes = {}
         if self.vote_list == []:
             return None
         for player in self.vote_list:
             try:
                 votes[player] += 1
-            except (
-                KeyError
-            ):  # Si le joueur n'a pas encore reçu de vote, alors son 'compte' est crée
+            except KeyError:  # Si le joueur n'a pas encore reçu de vote, alors son 'compte' est crée
                 votes[player] = 1
-        max_value = max(dict.items())
+        max_value = max(votes.items())
         for player in self.vote_list:
-            if dict[player] == max_value:
+            if votes[player] == max_value:
                 break
         self.vote_list = []
-        return self.eliminate(player, reason)
+        return await self.eliminate(player, reason)
 
     def get_element_by_attribute(
         self, list, attribute, match, get_list=False,output_attr=None, inversed=False
@@ -383,25 +379,26 @@ class Player:
     def __init__(self, name, discord: discord.User | discord.Member):
         self.name = name
         self.discord = discord
-        self.state = True
+        self.state = "alive"
         self.role: str | None = None
         self.enamored = False
 
     async def kill(self, specials_channel: discord.TextChannel):
         import asyncio
-
+        print(f"{self.name} killed")
         assert type(specials_channel) is discord.TextChannel
-        if self.state is not False:
-            self.state = False
+        if self.state != "dead":
             if self.role == "hunter":
-                self.state = 0
+                self.state = "pause"
                 await specials_channel.send(
-                    "Because of your role, you can take your revenge with !hunt player_name"
-                )
+                    "Because of your role, you can take your revenge with !hunt player_name")
                 await asyncio.wait_for(self.await_for_response(), 60)
                 hunted = response
                 response = None
+                self.state = "dead"
                 return hunted
+            else:
+                self.state = "dead"
 
     async def transfer_response(self, r):
         global response
