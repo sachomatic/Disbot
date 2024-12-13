@@ -65,11 +65,7 @@ class Game:
         werewolf_channel = self.werewolf_channel
         specials_channel = self.specials_channel
 
-        roles = self.roles
-
         for index, player in enumerate(self.player_list):
-            r = roles[index]
-            print()
             try:
                 print(f"Assigning role to {player.discord.display_name}")
                 if player.role == "werewolf":
@@ -81,7 +77,7 @@ class Game:
                     overwrite.read_message_history = False
                     await specials_channel.set_permissions(player.discord, overwrite=overwrite)
             except Exception as error:
-                print(f"Can't assign role {r} to {player.discord.name} : {error}")
+                print(f"Can't assign permission to {player.discord.name} : {error}")
                 raise error
 
     async def transfer_response(self, r):

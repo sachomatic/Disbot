@@ -120,7 +120,7 @@ async def start_game(ctx: commands.Context, *args, **kwargs):
         # Game() est la classe qui gère la partie en cours
         game = Game(player_lst, ctx.guild)
 
-        await ctx.send("Starting game with:", delete_after=5)
+        await ctx.send("Starting game with:")
         temp = ', '.join(game.get_element_by_attribute(player_lst,"name",None,get_list=True,output_attr=True))
         await ctx.send(temp)
 
@@ -139,25 +139,27 @@ async def start_game(ctx: commands.Context, *args, **kwargs):
         final_time = end_time - start_time
         minutes = final_time // 60
         seconds = round(final_time % 60)
-        await ctx.send(f"Took {int(minutes)}:{math.floor(seconds)} to prepare game.",delete_after=10)      
+        await ctx.send(f"Took {int(minutes)}:{math.floor(seconds)} to prepare game.",delete_after=10)
+
+        await game.game(ctx)
 
     except NameError:
         await ctx.send("Game is not created. Please use !create_game.")
         logging.exception("")
-        return
+        stop_game()
     except KeyError:
         logging.exception("")
         await ctx.send("Not enough players to start game")
+        stop_game()
     except Exception:
         logging.exception("")
         await ctx.send(
-            "An error occured, causing the game to crash. Please restart it."
-        )
+            "An error occured, causing the game to crash. Please restart it.")
+        stop_game()
     finally:
         game = None
         game_start = False
         player_lst = []
-        stop_game(ctx)
 
 
 async def search_channel(name, server):
