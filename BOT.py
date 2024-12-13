@@ -121,31 +121,25 @@ async def start_game(ctx: commands.Context, *args, **kwargs):
         game = Game(player_lst, ctx.guild)
 
         await ctx.send("Starting game with:", delete_after=5)
-        temp = ''.join(player_lst)
+        temp = ', '.join(game.get_element_by_attribute(player_lst,"name",None,get_list=True,output_attr=True))
         await ctx.send(temp)
-
-        await ctx.send("Preparing game... Please wait while the roles are resetting.")
-        try:
-            # Les rôles de la partie précédente, si ils existent, sont retirés
-            await game.reset()
-        except Exception:
-            logging.exception("")
-            await ctx.send(
-                "Error : roles couldn't be resetted, game will continue but might crash"
-            )
 
         # Attribution des permissions pour chaque channel
         game.attribute_game_roles()
+
+        # Envoi d'un message pour informer les joueurs de leurs rôles
         for player in game.player_list:
             await player.discord.send(f"Hello {player.discord.global_name}You are a {player.role}")
+
+        # attribution des rôles
+        await game.assign_roles()
+        await game.start(ctx)
+
         end_time = time.time()
         final_time = end_time - start_time
         minutes = final_time // 60
         seconds = round(final_time % 60)
-        await ctx.send(f"Took {int(minutes)}:{math.floor(seconds)} to prepare game.",delete_after=10)
-        # attribution des rôles
-        await game.assign_roles()
-        await game.start(ctx)
+        await ctx.send(f"Took {int(minutes)}:{math.floor(seconds)} to prepare game.",delete_after=10)      
 
     except NameError:
         await ctx.send("Game is not created. Please use !create_game.")
@@ -163,6 +157,7 @@ async def start_game(ctx: commands.Context, *args, **kwargs):
         game = None
         game_start = False
         player_lst = []
+        stop_game(ctx)
 
 
 async def search_channel(name, server):

@@ -84,24 +84,6 @@ class Game:
                 print(f"Can't assign role {r} to {player.discord.name} : {error}")
                 raise error
 
-    async def reset(self):
-        print("Deleting roles on users")
-        overwrite = discord.PermissionOverwrite()
-        overwrite.view_channel = False
-
-        roles = self.roles
-
-        for role in roles:
-            await self.werewolf_channel.set_permissions(role, overwrite=overwrite)
-            await self.specials_channel.set_permissions(role, overwrite=overwrite)
-
-        for user in self.player_list:
-            for role in roles:
-                try:
-                    await user.discord.remove_roles(role)
-                except Exception as error:
-                    print(f"Couldn't remove {role} from {user.discord.name} : {error}")
-
     async def transfer_response(self, r):
         global response
         response = r
@@ -376,10 +358,10 @@ class Game:
         return self.eliminate(player, reason)
 
     def get_element_by_attribute(
-        self, list, attribute, match, output_attr=None, inversed=False
+        self, list, attribute, match, get_list=False,output_attr=None, inversed=False
     ):
         output = []
-        if inversed is False:
+        if inversed is False and get_list == False:
             for element in list:
                 if getattr(element, attribute) == match:
                     if output_attr:
@@ -387,13 +369,17 @@ class Game:
                     else:
                         output.append(element)
             return output
-        else:
+        elif inversed == True and get_list == False:
             for element in list:
                 if getattr(element, attribute) != match:
                     if output_attr:
                         output.append(getattr(element, output_attr))
                     else:
                         output.append(element)
+            return output
+        else:
+            for element in list:
+                output.append(getattr(element,attribute))
             return output
 
 
