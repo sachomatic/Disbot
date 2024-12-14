@@ -116,11 +116,14 @@ async def start_game(ctx: commands.Context, *args, **kwargs):
     try:
         start_time = time.time()
         game_start = True
+
         # Game() est la classe qui gère la partie en cours
         game = Game(player_lst, ctx.guild)
+
         await ctx.send("Starting game with:", delete_after=5)
-        for pl in game.player_list:
-            await ctx.send(f"-{pl.name}", delete_after=5)
+        temp = ''.join(player_lst)
+        await ctx.send(temp)
+
         await ctx.send("Preparing game... Please wait while the roles are resetting.")
         try:
             # Les rôles de la partie précédente, si ils existent, sont retirés
@@ -130,9 +133,10 @@ async def start_game(ctx: commands.Context, *args, **kwargs):
             await ctx.send(
                 "Error : roles couldn't be resetted, game will continue but might crash"
             )
-        # Création des rôles (1-9) pour l'anonimat des rôles
+
+        # Attribution des permissions pour chaque channel
         game.attribute_game_roles()
-        for player in player_lst:
+        for player in game.player_list:
             await player.discord.send(f"Hello {player.discord.global_name}You are a {player.role}")
         end_time = time.time()
         final_time = end_time - start_time

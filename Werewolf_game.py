@@ -14,8 +14,6 @@ class Game:
         self.vote_list = []
         self.killed_list = {}
 
-        self.roles = self.get_game_roles(server)
-
         # nombre de tours
         self.round = 0
 
@@ -62,51 +60,26 @@ class Game:
         self.player_list[5].role = role_spe1
         self.player_list[6].role = role_spe2
 
-    def get_game_roles(self, guild: discord.Guild):
-        roles = [
-            role
-            for role in guild.roles
-            if role.name in ["1", "2", "3", "4", "5", "6", "7", "8", "9"]
-        ]
-
-        print("Keeping roles:")
-        for prnt_role in roles:
-            print(prnt_role.name, end=", ")
-        print("")  # Newline after the printed roles
-
-        random.shuffle(roles)
-        return roles
-
     async def assign_roles(self):
         print("Attributing discord roles to user and channels")
         werewolf_channel = self.werewolf_channel
         specials_channel = self.specials_channel
 
         roles = self.roles
-        print(roles)
 
         for index, player in enumerate(self.player_list):
             r = roles[index]
+            print()
             try:
+                print(f"Assigning role to {player.discord.display_name}")
                 if player.role == "werewolf":
-                    await player.discord.add_roles(r)
                     overwrite = discord.PermissionOverwrite()
                     overwrite.read_message_history = False
-                    await werewolf_channel.set_permissions(r, overwrite=overwrite)
-
-                if player.role in [
-                    "president",
-                    "cupidon",
-                    "hunter",
-                    "witch",
-                    "stealer",
-                ]:
-                    await player.discord.add_roles(r)
+                    await werewolf_channel.set_permissions(player.discord, overwrite=overwrite)
+                elif player.role in ["president","cupidon","hunter","witch","stealer"]:
                     overwrite = discord.PermissionOverwrite()
                     overwrite.read_message_history = False
-                    await specials_channel.set_permissions(r, overwrite=overwrite)
-                else:
-                    await player.discord.add_roles(r)
+                    await specials_channel.set_permissions(player.discord, overwrite=overwrite)
             except Exception as error:
                 print(f"Can't assign role {r} to {player.discord.name} : {error}")
                 raise error
