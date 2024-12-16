@@ -66,15 +66,16 @@ class Game:
         specials_channel = self.specials_channel
 
         for index, player in enumerate(self.player_list):
+            overwrite = discord.PermissionOverwrite()
+            overwrite.read_message_history = False
+            overwrite.view_channel = True
+            overwrite.send_messages = True
+            overwrite.use_application_commands = True
             try:
                 print(f"Assigning role to {player.discord.display_name}")
                 if player.role == "werewolf":
-                    overwrite = discord.PermissionOverwrite()
-                    overwrite.read_message_history = False
                     await werewolf_channel.set_permissions(player.discord, overwrite=overwrite)
                 elif player.role in ["president","cupidon","hunter","witch","stealer"]:
-                    overwrite = discord.PermissionOverwrite()
-                    overwrite.read_message_history = False
                     await specials_channel.set_permissions(player.discord, overwrite=overwrite)
             except Exception as error:
                 print(f"Can't assign permission to {player.discord.name} : {error}")
@@ -103,7 +104,8 @@ class Game:
         await self.thread
 
     def terminate_game(self):
-        thread  = self.thread.cancel()
+        self.thread.cancel()
+        print("Tried to terminate thread")
         
         
     async def game(self, ctx: discord.ext.commands.Context):
