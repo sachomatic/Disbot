@@ -1,5 +1,6 @@
-#! /bin/env python3
+#! /usr/bin/env python3
 
+import logger
 import os
 import time
 import datetime
